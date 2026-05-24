@@ -1,0 +1,20 @@
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of D:\laragon\www\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * D:\laragon\www\smart-grocery-ai-store\package-lock.json
+
+Failed to type check.
+
+./src/app/_components/design-hero.tsx:49:20
+Type error: 'container' is possibly 'null'.
+
+  [90m47 |[0m
+  [90m48 |[0m     [36mfunction[0m resize() {
+[31m[1m>[0m [90m49 |[0m       [36mconst[0m rect = container.getBoundingClientRect()
+  [90m   |[0m                    [31m[1m^[0m
+  [90m50 |[0m       [36mconst[0m dpr = window.devicePixelRatio || [35m1[0m
+  [90m51 |[0m       canvas.width = rect.width * dpr
+  [90m52 |[0m       canvas.height = rect.height * dpr
+Next.js build worker exited with code: 1 and signal: null
