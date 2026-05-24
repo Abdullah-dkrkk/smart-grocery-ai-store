@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
+import { handleImgError } from "@/lib/utils/placeholder"
 import type { Product } from "@/types/product"
 
 interface DealsOfDayProps {
@@ -57,13 +58,16 @@ function DealsCountdown({ endDate }: { endDate: Date }) {
 export function DealsOfDay({
   title = "Deals Of The Day",
   subtitle,
-  products,
+  products = [],
   endDate,
   featuredProduct,
 }: DealsOfDayProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const targetDate = endDate || new Date(Date.now() + 86400000)
-  const fp = featuredProduct || products[0]
+  const safeProducts = Array.isArray(products) ? products : []
+  const fp = featuredProduct && featuredProduct.id ? featuredProduct : safeProducts[0]
+
+  if (!fp) return null
 
   const discount = !fp.category_slug?.includes("seafood") && fp.compare_price
     ? Math.round(((fp.compare_price - fp.price) / fp.compare_price) * 100)
@@ -83,7 +87,7 @@ export function DealsOfDay({
         {/* Featured Product */}
         <div className="lg:col-span-5 bg-card border rounded-xl overflow-y-auto max-h-[560px] flex flex-col">
           <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-            <img src={fp.image} alt={fp.name} className="h-full w-full object-cover" loading="lazy" />
+            <img src={fp.image} alt={fp.name} className="h-full w-full object-cover" loading="lazy" onError={handleImgError} />
             {fp.badge && (
               <Badge className="absolute top-3 left-3 bg-brand-green text-white text-xs px-2">{fp.badge}</Badge>
             )}
@@ -117,7 +121,8 @@ export function DealsOfDay({
             [&::-webkit-scrollbar-track]:bg-muted/30
             [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20
             [&::-webkit-scrollbar-thumb]:rounded-full">
-            {products.slice(0, 6).map((product) => {
+            {safeProducts.slice(0, 6).map((product) => {
+              if (!product) return null
               const dsc = !product.category_slug?.includes("seafood") && product.compare_price
                 ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
                 : null
@@ -125,7 +130,7 @@ export function DealsOfDay({
               return (
                 <div key={product.id} className="flex gap-4 bg-card border rounded-lg p-4 transition-shadow hover:shadow-md">
                   <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                    <img src={product.image} alt={product.name} className="h-full w-full object-cover" loading="lazy" />
+                    <img src={product.image} alt={product.name} className="h-full w-full object-cover" loading="lazy" onError={handleImgError} />
                     {dsc && dsc > 0 && (
                       <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] font-bold px-1.5 rounded-sm">
                         -{dsc}%

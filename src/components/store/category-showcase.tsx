@@ -103,14 +103,6 @@ export function CategoryShowcase({
     setIsDragging(false)
   }, [])
 
-  if (categories.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p className="text-sm">No categories available.</p>
-      </div>
-    )
-  }
-
   function scroll(dir: "left" | "right") {
     if (!scrollRef.current) return
     const cardWidth = 160
@@ -125,45 +117,55 @@ export function CategoryShowcase({
           <h2 className="text-3xl font-heading font-semibold tracking-tight">{title}</h2>
           {description && <p className="text-[15px] text-muted-foreground mt-1">{description}</p>}
         </div>
-        <div className="hidden sm:flex items-center gap-3">
-          <Button variant="ghost" className="gap-1 text-sm text-brand-green hover:text-brand-green/80 font-semibold">
-            View All <ChevronRight className="h-4 w-4" />
-          </Button>
+        {categories.length > 0 && (
+          <div className="hidden sm:flex items-center gap-3">
+            <Button variant="ghost" className="gap-1 text-sm text-brand-green hover:text-brand-green/80 font-semibold">
+              View All <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {categories.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-xl font-heading text-muted-foreground py-8">No categories available.</p>
         </div>
-      </div>
+      ) : (
+        <>
+          <div
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className={`flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory py-3 select-none
+            [&::-webkit-scrollbar]:h-1.5
+            [&::-webkit-scrollbar-track]:bg-muted/30
+            [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20
+            [&::-webkit-scrollbar-thumb]:rounded-full
+            ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
+            {categories.map((cat, idx) => (
+              <a key={cat.id} href={`/category/${cat.slug}`} draggable="false"
+                className={`group flex flex-col items-center justify-center text-center p-6 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-[160px] min-h-[200px] flex-shrink-0 snap-start ${getCategoryBg(idx)}`}>
+                <span className={`inline-flex items-center justify-center w-[68px] h-[68px] rounded-full text-2xl mb-3 transition-transform duration-200 group-hover:scale-110 ${getCategoryIconBg(idx)}`}>
+                  {getSvgForSlug(cat.slug)}
+                </span>
+                <span className="text-[15px] font-heading font-semibold leading-tight line-clamp-2">{cat.name}</span>
+                <span className="text-xs text-muted-foreground mt-1">{cat.product_count} items</span>
+              </a>
+            ))}
+          </div>
 
-      <div
-        ref={scrollRef}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className={`flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory py-3 select-none
-        [&::-webkit-scrollbar]:h-1.5
-        [&::-webkit-scrollbar-track]:bg-muted/30
-        [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20
-        [&::-webkit-scrollbar-thumb]:rounded-full
-        ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
-        {categories.map((cat, idx) => (
-          <a key={cat.id} href={`/category/${cat.slug}`} draggable="false"
-            className={`group flex flex-col items-center justify-center text-center p-6 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-[160px] min-h-[200px] flex-shrink-0 snap-start ${getCategoryBg(idx)}`}>
-            <span className={`inline-flex items-center justify-center w-[68px] h-[68px] rounded-full text-2xl mb-3 transition-transform duration-200 group-hover:scale-110 ${getCategoryIconBg(idx)}`}>
-              {getSvgForSlug(cat.slug)}
-            </span>
-            <span className="text-[15px] font-heading font-semibold leading-tight line-clamp-2">{cat.name}</span>
-            <span className="text-xs text-muted-foreground mt-1">{cat.product_count} items</span>
-          </a>
-        ))}
-      </div>
-
-      <div className="flex justify-end mt-4 gap-2">
-        <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("left")}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("right")}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+          <div className="flex justify-end mt-4 gap-2">
+            <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("left")}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("right")}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </>
+      )}
     </section>
   )
 }

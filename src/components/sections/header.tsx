@@ -196,15 +196,15 @@ export function Header({ categories = [], cartCount = 0, wishlistCount = 0 }: He
                 <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
               </button>
               <div className="absolute top-full left-0 mt-2 w-[460px] bg-card border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="p-3">
+                <div className="p-4">
                   {displayCategories.reduce((rows, cat, i) => {
                     if (i % 2 === 0) {
                       const pair = displayCategories.slice(i, i + 2)
                       rows.push(
-                        <div key={i} className="flex gap-2 mb-2">
+                        <div key={i} className="flex gap-3 mb-3">
                           {pair.map((c) => (
                             <a key={c.id} href={`/category/${c.slug}`}
-                              className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-muted transition-colors border">
+                              className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors border">
                               <span className="text-brand-green shrink-0">{getSvgForSlug(c.slug)}</span>
                               <span className="text-[13px] text-muted-foreground">{c.name}</span>
                             </a>

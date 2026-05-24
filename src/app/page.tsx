@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { gsap } from "gsap"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -17,54 +16,20 @@ import { DealsOfDay } from "@/components/sections/deals-of-day"
 import { TestimonialSection } from "@/components/sections/testimonial-section"
 import { NewsletterSection } from "@/components/sections/newsletter-section"
 import { Footer } from "@/components/store/footer"
-import type { Product, ProductCategory } from "@/types/product"
+import { useCategories } from "@/lib/hooks/use-categories"
+import { useProducts, useFeaturedProducts } from "@/lib/hooks/use-products"
+import {
+  ProductSliderSkeleton,
+  CategoryShowcaseSkeleton,
+  DailyBestSellsSkeleton,
+  DealsOfDaySkeleton,
+} from "@/components/ui/skeleton"
 import type { TestimonialItem } from "@/types/common"
 
 const announcements = [
   { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
   { text: "Free delivery on orders over $50 — shop now!" },
   { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
-]
-
-const categories: ProductCategory[] = [
-  { id: 1, name: "Milks & Dairies", slug: "milks-dairies", description: "", image: "", icon: "🥛", parent_id: null, product_count: 30 },
-  { id: 2, name: "Wines & Drinks", slug: "wines-drinks", description: "", image: "", icon: "🍷", parent_id: null, product_count: 25 },
-  { id: 3, name: "Clothing & Beauty", slug: "clothing-beauty", description: "", image: "", icon: "👗", parent_id: null, product_count: 45 },
-  { id: 4, name: "Pet Foods & Toys", slug: "pet-foods", description: "", image: "", icon: "🐾", parent_id: null, product_count: 18 },
-  { id: 5, name: "Baking Material", slug: "baking-material", description: "", image: "", icon: "🥖", parent_id: null, product_count: 35 },
-  { id: 6, name: "Fresh Fruit", slug: "fresh-fruit", description: "", image: "", icon: "🍎", parent_id: null, product_count: 50 },
-  { id: 7, name: "Vegetables", slug: "vegetables", description: "", image: "", icon: "🥦", parent_id: null, product_count: 65 },
-  { id: 8, name: "Bread & Juice", slug: "bread-juice", description: "", image: "", icon: "🧃", parent_id: null, product_count: 28 },
-  { id: 9, name: "Fresh Seafood", slug: "fresh-seafood", description: "", image: "", icon: "🐟", parent_id: null, product_count: 22 },
-  { id: 10, name: "Fast Food", slug: "fast-food", description: "", image: "", icon: "🍟", parent_id: null, product_count: 40 },
-  { id: 11, name: "Cake & Milk", slug: "cake-milk", description: "", image: "", icon: "🎂", parent_id: null, product_count: 15 },
-  { id: 12, name: "Coffee & Teas", slug: "coffee-teas", description: "", image: "", icon: "☕", parent_id: null, product_count: 33 },
-]
-
-const baseProduct = {
-  description: "", short_description: "", cost_per_unit: null,
-  images: [], category_id: 1, is_featured: true, is_on_sale: true,
-  stock: 50, unit: "each", weight: null, tags: [] as string[],
-  created_at: "2025-01-01",
-}
-
-const products: Product[] = [
-  { ...baseProduct, id: 1, name: "Seeds of Change Organic Quinoa", slug: "organic-quinoa", price: 28.85, compare_price: 32.8, image: "https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?w=400&h=500&fit=crop", category_name: "Milk & Diaries", category_slug: "milk-diaries", rating: 4, review_count: 45, badge: "Hot", badges: ["Hot"] },
-  { ...baseProduct, id: 2, name: "All Natural Italian-Style Chicken Meatballs", slug: "chicken-meatballs", price: 28.85, compare_price: 32.8, image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&h=500&fit=crop", category_name: "Milk & Diaries", category_slug: "milk-diaries", rating: 5, review_count: 32, badge: "Sale", badges: ["Sale"] },
-  { ...baseProduct, id: 3, name: "Foster Farms Takeout Crispy Classic Buffalo Wings", slug: "buffalo-wings", price: 28.85, compare_price: null, image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=400&h=500&fit=crop", category_name: "Cookies & Teas", category_slug: "cookies-teas", rating: 4.5, review_count: 78, badge: "New", badges: ["New"] },
-  { ...baseProduct, id: 4, name: "Blue Diamond Almonds Lightly Salted", slug: "blue-diamond-almonds", price: 24.99, compare_price: 34.99, image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=500&fit=crop", category_name: "Cookies & Teas", category_slug: "cookies-teas", rating: 4, review_count: 120, badge: "Hot", badges: ["Hot"] },
-  { ...baseProduct, id: 5, name: "Angie's Boomchickapop Sweet & Salty Kettle Corn", slug: "kettle-corn", price: 4.32, compare_price: 6.99, image: "https://images.unsplash.com/photo-1495147466023-ac5c588e2e94?w=400&h=500&fit=crop", category_name: "Pet Foods", category_slug: "pet-foods", rating: 4.5, review_count: 210, badge: "", badges: [] },
-  { ...baseProduct, id: 6, name: "Fresh Organic Strawberries Premium Pack", slug: "organic-strawberries", price: 5.99, compare_price: 8.99, image: "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=500&fit=crop", category_name: "Pet Foods", category_slug: "pet-foods", rating: 4.8, review_count: 340, badge: "Fresh", badges: ["Fresh"] },
-  { ...baseProduct, id: 7, name: "Artisan Sourdough Bread Fresh Baked Daily", slug: "sourdough-bread", price: 6.99, compare_price: 9.99, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=500&fit=crop", category_name: "Meat", category_slug: "meat", rating: 4.7, review_count: 89, badge: "Bakery", badges: ["Bakery"] },
-  { ...baseProduct, id: 8, name: "Organic Cold Pressed Green Juice Detox Blend", slug: "green-juice", price: 7.49, compare_price: null, image: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=400&h=500&fit=crop", category_name: "Meat", category_slug: "meat", rating: 4.6, review_count: 55, badge: "Organic", badges: ["Organic"] },
-  { ...baseProduct, id: 9, name: "Belgian Dark Chocolate 72% Cocoa Premium Bar", slug: "dark-chocolate", price: 4.49, compare_price: 5.99, image: "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&h=500&fit=crop", category_name: "Vegetables", category_slug: "vegetables", rating: 4.9, review_count: 188, badge: "Vegan", badges: ["Vegan"] },
-  { ...baseProduct, id: 10, name: "Creamy Greek Yogurt Plain 32oz Family Size", slug: "greek-yogurt", price: 5.29, compare_price: 7.49, image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=500&fit=crop", category_name: "Vegetables", category_slug: "vegetables", rating: 4.3, review_count: 167, badge: "Sale", badges: ["Sale"] },
-  { ...baseProduct, id: 11, name: "Organic Fuji Apples Sweet & Crispy 3lb Bag", slug: "fuji-apples", price: 3.99, compare_price: 5.49, image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=500&fit=crop", category_name: "Fruits", category_slug: "fruits", rating: 4.7, review_count: 203, badge: "Fresh", badges: ["Fresh"] },
-  { ...baseProduct, id: 12, name: "Free Range Large Eggs Farm Fresh Dozen", slug: "free-range-eggs", price: 6.99, compare_price: 8.99, image: "https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=400&h=500&fit=crop", category_name: "Fruits", category_slug: "fruits", rating: 4.8, review_count: 298, badge: "", badges: [] },
-  { ...baseProduct, id: 13, name: "Chen Watermelon Fresh & Sweet", slug: "chen-watermelon", price: 69.93, compare_price: 942.00, image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=500&fit=crop", category_name: "Fruits", category_slug: "fruits", rating: 4.2, review_count: 67, badge: "Sale", badges: ["Sale"] },
-  { ...baseProduct, id: 14, name: "Encore Seafoods Stuffed Alaskan Salmon", slug: "stuffed-alaskan", price: 1065, compare_price: null, image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=500&fit=crop", category_name: "Fresh Seafood", category_slug: "fresh-seafood", rating: 4.6, review_count: 43, badge: "", badges: [] },
-  { ...baseProduct, id: 15, name: "Diet Foods Blue Diamond Almonds", slug: "diet-almonds", price: 282.00, compare_price: 807.00, image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=500&fit=crop", category_name: "Pet Foods", category_slug: "pet-foods", rating: 4.4, review_count: 92, badge: "Hot", badges: ["Hot"] },
-  { ...baseProduct, id: 16, name: "Pet Foods Seeds of Change Organic Rice", slug: "organic-rice", price: 243.84, compare_price: 508.00, image: "https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?w=400&h=500&fit=crop", category_name: "Pet Foods", category_slug: "pet-foods", rating: 4.1, review_count: 55, badge: "Sale", badges: ["Sale"] },
 ]
 
 const testimonials: TestimonialItem[] = [
@@ -85,6 +50,10 @@ const testimonials: TestimonialItem[] = [
 export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const { data: categories = [], isLoading: catLoading } = useCategories()
+  const { data: products = [], isLoading: prodLoading } = useProducts()
+  const { data: featuredProducts = [], isLoading: featLoading } = useFeaturedProducts()
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -237,11 +206,15 @@ export default function HomePage() {
 
         {/* Featured Categories */}
         <section>
-          <CategoryShowcase
-            title="Featured Categories"
-            description="Browse our wide selection of fresh products"
-            categories={categories}
-          />
+          {catLoading ? (
+            <CategoryShowcaseSkeleton />
+          ) : (
+            <CategoryShowcase
+              title="Featured Categories"
+              description="Browse our wide selection of fresh products"
+              categories={categories}
+            />
+          )}
         </section>
 
         <Separator />
@@ -261,78 +234,98 @@ export default function HomePage() {
 
         {/* Best Sellers */}
         <section>
-          <ProductSlider
-            title="Best Sellers"
-            description="Top rated products you cannot miss"
-            products={products.filter(p => p.rating >= 4.5)}
-            tabs={[
-              { slug: "all", name: "All" },
-              { slug: "fruits", name: "Fruits" },
-              { slug: "vegetables", name: "Vegetables" },
-              { slug: "meat", name: "Meat" },
-              { slug: "pet-foods", name: "Pet Foods" },
-            ]}
-          />
+          {featLoading || prodLoading ? (
+            <ProductSliderSkeleton />
+          ) : (
+            <ProductSlider
+              title="Best Sellers"
+              description="Top rated products you cannot miss"
+              products={featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8)}
+              tabs={[
+                { slug: "all", name: "All" },
+                { slug: "fruits", name: "Fruits" },
+                { slug: "vegetables", name: "Vegetables" },
+                { slug: "meat", name: "Meat" },
+                { slug: "pet-foods", name: "Pet Foods" },
+              ]}
+            />
+          )}
         </section>
 
         <Separator />
 
         {/* Popular Products */}
         <section>
-          <ProductSlider
-            title="Popular Products"
-            description="Most loved items by our customers"
-            products={products}
-            tabs={[
-              { slug: "all", name: "All" },
-              { slug: "milk-diaries", name: "Milk" },
-              { slug: "cookies-teas", name: "Coffee & Teas" },
-              { slug: "pet-foods", name: "Pet Foods" },
-              { slug: "meat", name: "Meat" },
-              { slug: "vegetables", name: "Vegetables" },
-              { slug: "fruits", name: "Fruits" },
-            ]}
-          />
+          {prodLoading ? (
+            <ProductSliderSkeleton />
+          ) : (
+            <ProductSlider
+              title="Popular Products"
+              description="Most loved items by our customers"
+              products={products}
+              tabs={[
+                { slug: "all", name: "All" },
+                { slug: "milk-diaries", name: "Milk" },
+                { slug: "cookies-teas", name: "Coffee & Teas" },
+                { slug: "pet-foods", name: "Pet Foods" },
+                { slug: "meat", name: "Meat" },
+                { slug: "vegetables", name: "Vegetables" },
+                { slug: "fruits", name: "Fruits" },
+              ]}
+            />
+          )}
         </section>
 
         <Separator />
 
         {/* Daily Best Sells */}
         <section>
-          <DailyBestSells
-            title="Daily Best Sells"
-            subtitle="Check out our best deals today"
-            bannerTitle="Bring nature into your home"
-            bannerDescription="Save up to 65%"
-            bannerButtonLabel="Shop Now"
-            bannerImage="https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop"
-            products={products.slice(0, 3)}
-            endDate={new Date(Date.now() + 86400000 * 2)}
-          />
+          {prodLoading ? (
+            <DailyBestSellsSkeleton />
+          ) : (
+            <DailyBestSells
+              title="Daily Best Sells"
+              subtitle="Check out our best deals today"
+              bannerTitle="Bring nature into your home"
+              bannerDescription="Save up to 65%"
+              bannerButtonLabel="Shop Now"
+              bannerImage="https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop"
+              products={products.slice(0, 3)}
+              endDate={new Date(Date.now() + 86400000 * 2)}
+            />
+          )}
         </section>
 
         <Separator />
 
         {/* Deals Of The Day */}
         <section>
-          <DealsOfDay
-            title="Deals Of The Day"
-            subtitle="Limited time offers — grab them before they're gone"
-            products={products}
-            endDate={new Date(Date.now() + 43200000)}
-            featuredProduct={products[12]}
-          />
+          {prodLoading ? (
+            <DealsOfDaySkeleton />
+          ) : (
+            <DealsOfDay
+              title="Deals Of The Day"
+              subtitle="Limited time offers — grab them before they're gone"
+              products={products}
+              endDate={new Date(Date.now() + 43200000)}
+              featuredProduct={products.length > 12 ? products[12] : products[products.length - 1]}
+            />
+          )}
         </section>
 
         <Separator />
 
         {/* Special Offers */}
         <section>
-          <ProductSlider
-            title="Special Offers"
-            description="Great discounts on your favorite products"
-            products={products.filter(p => p.compare_price && p.compare_price > p.price * 1.2)}
-          />
+          {prodLoading ? (
+            <ProductSliderSkeleton />
+          ) : (
+            <ProductSlider
+              title="Special Offers"
+              description="Great discounts on your favorite products"
+              products={products.filter(p => p.compare_price && p.compare_price > p.price * 1.2)}
+            />
+          )}
         </section>
 
         <Separator />

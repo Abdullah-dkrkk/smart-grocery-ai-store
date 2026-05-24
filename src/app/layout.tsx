@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar"
+import { Providers } from "@/lib/providers"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,8 +17,8 @@ const bricolageGrotesque = Bricolage_Grotesque({
 })
 
 export const metadata: Metadata = {
-  title: "SmartGrocery — Design System",
-  description: "SmartGrocery Design System — Brand guidelines, components, and patterns",
+  title: "SmartGrocery — AI-Powered Grocery Store",
+  description: "Fresh groceries delivered to your door. AI-powered recommendations, health profiles, and smart shopping.",
 };
 
 export default function RootLayout({
@@ -28,8 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${bricolageGrotesque.variable}`}>
       <body className="min-h-dvh flex flex-col bg-background text-foreground">
-        <Navbar />
-        <main className="flex-1">{children}</main>
+        <Providers>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+        </Providers>
       </body>
     </html>
   );

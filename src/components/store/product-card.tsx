@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { handleImgError } from "@/lib/utils/placeholder"
 import { ShoppingCart, Heart, Star } from "lucide-react"
 import type { Product } from "@/types/product"
 
@@ -50,6 +51,7 @@ export function ProductCard({
               "w-full object-cover transition-transform duration-300 group-hover:scale-105",
               isCompact ? "h-36" : isHorizontal ? "h-full" : "h-48"
             )}
+            onError={handleImgError}
           />
           {showBadge && product.badge && (
             <Badge className="absolute top-2 left-2 bg-brand-orange text-white border-0 text-xs">

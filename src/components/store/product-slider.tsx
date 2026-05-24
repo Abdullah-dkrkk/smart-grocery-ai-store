@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
+import { handleImgError } from "@/lib/utils/placeholder"
 import type { Product } from "@/types/product"
 
 interface Tab {
@@ -28,7 +29,8 @@ const badgeStyles: Record<string, string> = {
   Fresh: "bg-sky-500 text-white",
 }
 
-function ProductSlideCard({ product }: { product: Product }) {
+function ProductSlideCard({ product }: { product: Product | null | undefined }) {
+  if (!product) return null
   const badgeClass = product.badge ? badgeStyles[product.badge] || "bg-brand-green text-white" : ""
   const discount = !product.category_slug?.includes("seafood") && product.compare_price
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
@@ -48,6 +50,7 @@ function ProductSlideCard({ product }: { product: Product }) {
             alt={product.name}
             className={`h-full w-full object-cover transition-transform duration-500 ${hovered ? "scale-105" : ""}`}
             loading="lazy"
+            onError={handleImgError}
           />
           {product.badge && (
             <Badge className={`absolute top-2 left-2 text-xs px-2 py-0.5 font-semibold ${badgeClass}`}>
@@ -86,16 +89,17 @@ function ProductSlideCard({ product }: { product: Product }) {
   )
 }
 
-export function ProductSlider({ title, description, products, tabs }: ProductSliderProps) {
+export function ProductSlider({ title, description, products = [], tabs }: ProductSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState<string>("all")
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
   const [scrollLeft, setScrollLeft] = useState(0)
 
+  const safeProducts = Array.isArray(products) ? products : []
   const filtered = activeTab === "all"
-    ? products
-    : products.filter((p) => p.category_slug === activeTab)
+    ? safeProducts
+    : safeProducts.filter((p) => p && p.category_slug === activeTab)
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return
@@ -172,7 +176,7 @@ export function ProductSlider({ title, description, products, tabs }: ProductSli
 
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          <p className="text-sm">No products found in this category.</p>
+          <p className="text-xl font-heading text-muted-foreground py-8">No products found in this category.</p>
         </div>
       ) : (
         <div className="relative group -mx-1">
@@ -189,8 +193,8 @@ export function ProductSlider({ title, description, products, tabs }: ProductSli
               [&::-webkit-scrollbar-thumb]:rounded-full
               ${isDragging ? "cursor-grabbing select-none" : "cursor-grab"}`}
           >
-            {filtered.map((product) => (
-              <ProductSlideCard key={product.id} product={product} />
+            {filtered.map((product, idx) => (
+              <ProductSlideCard key={product?.id ?? idx} product={product} />
             ))}
           </div>
         </div>

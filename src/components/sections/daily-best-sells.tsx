@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
+import { handleImgError } from "@/lib/utils/placeholder"
 import type { Product } from "@/types/product"
 
 interface DailyBestSellsProps {
@@ -55,7 +56,8 @@ function CountdownTimer({ endDate }: { endDate: Date }) {
   )
 }
 
-function DailyProductCard({ product }: { product: Product }) {
+function DailyProductCard({ product }: { product: Product | null | undefined }) {
+  if (!product) return null
   const [hovered, setHovered] = useState(false)
   const discount = !product.category_slug?.includes("seafood") && product.compare_price
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
@@ -71,7 +73,7 @@ function DailyProductCard({ product }: { product: Product }) {
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <img src={product.image} alt={product.name}
           className={`h-full w-full object-cover transition-transform duration-500 ${hovered ? "scale-105" : ""}`}
-          loading="lazy" />
+          loading="lazy" onError={handleImgError} />
         {product.badge && (
           <Badge className={`absolute top-3 left-3 text-xs px-2 py-0.5 font-semibold ${badgeMap[product.badge] || "bg-brand-green"} text-white`}>
             {product.badge}
@@ -105,10 +107,11 @@ export function DailyBestSells({
   bannerDescription,
   bannerButtonLabel,
   bannerImage,
-  products,
+  products = [],
   endDate,
 }: DailyBestSellsProps) {
   const targetDate = endDate || new Date(Date.now() + 86400000)
+  const safeProducts = Array.isArray(products) ? products : []
 
   return (
     <section>
@@ -135,7 +138,7 @@ export function DailyBestSells({
         </div>
 
         <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {products.slice(0, 3).map((product) => (
+          {safeProducts.slice(0, 3).map((product) => (
             <DailyProductCard key={product.id} product={product} />
           ))}
         </div>
