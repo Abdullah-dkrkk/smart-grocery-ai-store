@@ -1,5 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { getCategorySvg } from "@/components/sections/category-icons"
+import { handleImgError } from "@/lib/utils/placeholder"
 import type { ProductCategory } from "@/types/product"
 
 interface CategoryCardProps {
@@ -12,6 +14,17 @@ interface CategoryCardProps {
 export function CategoryCard({ category, onClick, className, variant = "default" }: CategoryCardProps) {
   const isMinimal = variant === "minimal"
   const isIcon = variant === "icon"
+  const hasImage = !!category.image
+
+  const iconEl = hasImage ? (
+    <span className="inline-flex items-center justify-center w-16 h-16 rounded-full overflow-hidden ring-2 ring-border shrink-0">
+      <img src={category.image} alt={category.name} className="w-full h-full object-cover" onError={handleImgError} />
+    </span>
+  ) : (
+    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-brand-green/10 text-brand-green shrink-0">
+      {getCategorySvg(category.slug)}
+    </span>
+  )
 
   const content = (
     <Card
@@ -24,19 +37,14 @@ export function CategoryCard({ category, onClick, className, variant = "default"
     >
       {isIcon ? (
         <>
-          <span className="text-3xl mb-2">{category.icon}</span>
+          <span className="text-3xl mb-2">{iconEl}</span>
           <p className="text-sm font-medium line-clamp-1">{category.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{category.product_count} items</p>
         </>
       ) : (
         <div className="flex items-center gap-4 p-0">
-          {category.image && (
-            <div className="w-20 h-20 shrink-0">
-              <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
-            </div>
-          )}
-          <CardContent className={cn("flex-1", category.image ? "py-4 pl-0" : "py-4")}>
-            <span className="text-2xl mr-2">{category.icon}</span>
+          {iconEl}
+          <CardContent className="py-4 pl-0 flex-1">
             <p className="font-semibold">{category.name}</p>
             {category.description && (
               <p className="text-sm text-muted-foreground line-clamp-1">{category.description}</p>

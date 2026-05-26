@@ -14,10 +14,10 @@ export interface HealthProfileInput {
 
 export const healthApi = {
   getProfile() {
-    return get<HealthProfile>("/health-profile")
+    return get<HealthProfile>("/user/health-profile")
   },
 
   updateProfile(data: HealthProfileInput) {
-    return put<HealthProfile>("/health-profile", data)
+    return put<HealthProfile>("/user/health-profile", data)
   },
 }

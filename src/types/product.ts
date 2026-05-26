@@ -1,3 +1,9 @@
+export interface VendorInfo {
+  id: number
+  name: string
+  slug?: string
+}
+
 export interface Product {
   id: number
   name: string
@@ -22,6 +28,7 @@ export interface Product {
   unit: string
   weight: string | null
   tags: string[]
+  vendor: VendorInfo | null
   created_at: string
 }
 

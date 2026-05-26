@@ -123,7 +123,7 @@ export function DailyBestSells({
       <div className="grid lg:grid-cols-4 gap-5">
         <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-brand-green/90 to-brand-green/70 lg:col-span-1 p-6 min-h-[350px] flex flex-col justify-between">
           {bannerImage && (
-            <img src={bannerImage} alt="" className="absolute right-0 bottom-0 h-3/4 w-auto object-contain opacity-30" loading="lazy" />
+            <img src={bannerImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25" loading="lazy" />
           )}
           <div className="relative z-10">
             <p className="text-white/80 text-sm mb-1">{bannerDescription}</p>

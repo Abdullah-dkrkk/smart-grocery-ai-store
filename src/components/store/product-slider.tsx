@@ -1,12 +1,16 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { ChevronLeft, ChevronRight, Heart, Eye } from "lucide-react"
+import Link from "next/link"
+import { ChevronLeft, ChevronRight, Heart, Eye, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
 import { handleImgError } from "@/lib/utils/placeholder"
+import { useWishlist } from "@/lib/hooks/use-wishlist"
+import { useToast } from "@/components/ui/toast"
+import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
 
 interface Tab {
@@ -36,6 +40,10 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
     : null
   const [hovered, setHovered] = useState(false)
+  const { isWishlisted, toggleWishlist, loadingId } = useWishlist()
+  const { showToast } = useToast()
+  const loading = loadingId === product.id
+  const wishlisted = isWishlisted(product.id)
 
   return (
     <div className="w-[280px] flex-shrink-0 snap-start">
@@ -45,6 +53,11 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
         onMouseLeave={() => setHovered(false)}
       >
         <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+          {loading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+            </div>
+          )}
           <img
             src={product.image}
             alt={product.name}
@@ -63,12 +76,19 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
             </Badge>
           )}
           <div className={`absolute inset-0 flex items-center justify-center gap-2 transition-opacity ${hovered ? "opacity-100" : "opacity-0"} bg-black/10`}>
-            <Button size="icon" variant="secondary" className="h-9 w-9 rounded-full shadow">
-              <Heart className="h-4 w-4" />
+            <Button size="icon" variant="secondary" className="h-9 w-9 rounded-full shadow cursor-pointer"
+              onClick={async () => {
+                await toggleWishlist(product)
+                showToast(wishlisted ? "Removed from Wishlist" : "Added to Wishlist!")
+              }}
+            >
+              <Heart className={cn("h-4 w-4", wishlisted && "fill-red-500 text-red-500")} />
             </Button>
-            <Button size="icon" variant="secondary" className="h-9 w-9 rounded-full shadow">
-              <Eye className="h-4 w-4" />
-            </Button>
+            <Link href={`/products/${product.slug}`}>
+              <Button size="icon" variant="secondary" className="h-9 w-9 rounded-full shadow cursor-pointer">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="p-4 space-y-2">

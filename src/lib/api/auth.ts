@@ -4,27 +4,27 @@ import type { AuthResponse, User } from "./types"
 
 export const authApi = {
   register(data: { name: string; email: string; password: string; password_confirmation: string }) {
-    return post<AuthResponse>("/register", data)
+    return post<AuthResponse>("/auth/register", data)
   },
 
   login(data: { email: string; password: string }) {
-    return post<AuthResponse>("/login", data)
+    return post<AuthResponse>("/auth/login", data)
   },
 
   logout() {
-    return post<void>("/logout")
+    return post<void>("/auth/logout")
   },
 
   me() {
-    return get<User>("/me")
+    return get<User>("/auth/me")
   },
 
   forgotPassword(data: { email: string }) {
-    return post<{ message: string }>("/forgot-password", data)
+    return post<{ message: string }>("/auth/forgot-password", data)
   },
 
   resetPassword(data: { token: string; email: string; password: string; password_confirmation: string }) {
-    return post<{ message: string }>("/reset-password", data)
+    return post<{ message: string }>("/auth/reset-password", data)
   },
 
   async loginAndStore(data: { email: string; password: string }) {

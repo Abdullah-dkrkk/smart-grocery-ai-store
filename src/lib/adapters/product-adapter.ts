@@ -1,6 +1,16 @@
 import type { Product as ApiProduct, Category as ApiCategory } from "@/lib/api/types"
-import type { Product, ProductCategory } from "@/types/product"
+import type { Product, ProductCategory, VendorInfo } from "@/types/product"
 import { getPlaceholderImage } from "@/lib/utils/placeholder"
+
+const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL
+  ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "")
+  : "http://localhost:8000"
+
+function resolveImageUrl(path: string | null | undefined): string {
+  if (!path) return ""
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path
+  return `${API_ORIGIN}/${path.replace(/^\//, "")}`
+}
 
 const categoryNameToSlug: Record<string, string> = {
   "Milks & Dairies": "milks-dairies",
@@ -21,6 +31,30 @@ const categoryNameToSlug: Record<string, string> = {
   Breakfast: "breakfast",
 }
 
+function slugToSvgKey(slug: string): string {
+  const map: Record<string, string> = {
+    "milks-dairies": "milks", "milk-diaries": "milks",
+    "wines-drinks": "wines",
+    "clothing-beauty": "clothing",
+    "pet-foods": "pet", "pet-foods-toys": "pet",
+    "baking-material": "baking",
+    "fresh-fruit": "fruit", "fruits": "fruit",
+    "vegetables": "vegetables",
+    "bread-juice": "bread",
+    "fresh-seafood": "seafood",
+    "fast-food": "cake",
+    "cake-milk": "cake",
+    "coffee-teas": "coffee", "cookies-teas": "coffee",
+    "meat": "seafood", "meat-poultry": "seafood",
+    "breakfast": "baking",
+  }
+  return map[slug] ?? ""
+}
+
+export function getSvgForSlug(slug: string): string {
+  return slugToSvgKey(slug)
+}
+
 export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product | null {
   if (!apiProduct) return null
 
@@ -35,6 +69,17 @@ export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product
       : apiProduct.is_featured ? "Hot"
       : null
 
+    const mainImage = resolveImageUrl(apiProduct.image_url)
+    const productImages = Array.isArray(apiProduct.images)
+      ? apiProduct.images.map((img) => resolveImageUrl(img.image_url))
+      : mainImage
+        ? [mainImage]
+        : []
+
+    const vendor: VendorInfo | null = apiProduct.vendor
+      ? { id: apiProduct.vendor.id, name: apiProduct.vendor.name }
+      : null
+
     return {
       id: apiProduct.id ?? 0,
       name: apiProduct.name ?? "",
@@ -44,8 +89,8 @@ export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product
       price,
       compare_price: comparePrice,
       cost_per_unit: null,
-      image: apiProduct.image_url ?? getPlaceholderImage(),
-      images: apiProduct.image_url ? [apiProduct.image_url] : [],
+      image: mainImage || getPlaceholderImage(),
+      images: productImages,
       category_id: apiProduct.category_id ?? 0,
       category_name: catName,
       category_slug: catSlug,
@@ -59,6 +104,7 @@ export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product
       unit: "each",
       weight: apiProduct.weight_kg ?? null,
       tags: [],
+      vendor,
       created_at: apiProduct.created_at ?? "",
     }
   } catch {
@@ -80,8 +126,8 @@ export function adaptCategory(apiCategory: ApiCategory | null | undefined): Prod
       name: apiCategory.name ?? "",
       slug: apiCategory.slug ?? "",
       description: apiCategory.description ?? "",
-      image: apiCategory.image_url ?? "",
-      icon: "",
+      image: resolveImageUrl(apiCategory.image_url),
+      icon: getSvgForSlug(apiCategory.slug ?? ""),
       parent_id: apiCategory.parent_id ?? null,
       children: apiCategory.children?.map(adaptCategory).filter(Boolean) as ProductCategory[] | undefined,
       product_count: apiCategory.product_count ?? 0,

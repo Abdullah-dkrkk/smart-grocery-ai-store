@@ -120,7 +120,7 @@ export function Footer({ className }: FooterProps) {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-[15px] text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link.label}
                     </Link>

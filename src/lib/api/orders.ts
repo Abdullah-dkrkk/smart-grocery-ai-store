@@ -1,4 +1,4 @@
-import { get, post } from "./client"
+import { get, post, put } from "./client"
 import type { Order } from "./types"
 
 export interface CheckoutData {
@@ -11,23 +11,23 @@ export interface CheckoutData {
 
 export const ordersApi = {
   checkout(data: CheckoutData) {
-    return post<Order>("/orders/checkout", data)
+    return post<Order>("/customer/orders/checkout", data)
   },
 
   history(page = 1, per_page = 10) {
-    return get<Order[]>("/orders", { page, per_page })
+    return get<Order[]>("/customer/orders", { page, per_page })
   },
 
   detail(id: number) {
-    return get<Order>(`/orders/${id}`)
+    return get<Order>(`/customer/orders/${id}`)
   },
 
   cancel(id: number) {
-    return post<Order>(`/orders/${id}/cancel`)
+    return put<Order>(`/customer/orders/${id}/cancel`)
   },
 
   track(id: number) {
-    return get<{ current_status: string; timeline: { status: string; timestamp: string; note?: string }[] }>(`/orders/${id}/track`)
+    return get<{ current_status: string; timeline: { status: string; timestamp: string; note?: string }[] }>(`/customer/orders/${id}/track`)
   },
 
   // Admin endpoints
@@ -40,6 +40,6 @@ export const ordersApi = {
   },
 
   updateStatus(id: number, data: { status: string; notes?: string }) {
-    return post<Order>(`/admin/orders/${id}/status`, data)
+    return put<Order>(`/admin/orders/${id}/status`, data)
   },
 }

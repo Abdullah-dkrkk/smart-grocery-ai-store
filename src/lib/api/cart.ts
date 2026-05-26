@@ -3,18 +3,18 @@ import type { CartResponse } from "./types"
 
 export const cartApi = {
   list() {
-    return get<CartResponse>("/cart")
+    return get<CartResponse>("/customer/cart")
   },
 
   add(data: { product_id: number; quantity?: number }) {
-    return post<CartResponse>("/cart/add", data)
+    return post<CartResponse>("/customer/cart/add", data)
   },
 
   remove(cartItemId: number) {
-    return del<CartResponse>(`/cart/remove/${cartItemId}`)
+    return del<CartResponse>(`/customer/cart/${cartItemId}`)
   },
 
   clear() {
-    return del<{ message: string }>("/cart/clear")
+    return del<{ message: string }>("/customer/cart/clear")
   },
 }

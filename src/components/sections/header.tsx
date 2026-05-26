@@ -1,47 +1,27 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Search, ShoppingCart, Heart, ChevronDown, Menu, X, Phone, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { categorySvgs } from "@/components/sections/category-icons"
+import { getCategorySvg } from "@/components/sections/category-icons"
+import { handleImgError } from "@/lib/utils/placeholder"
+import { useWishlist } from "@/lib/hooks/use-wishlist"
 import type { ProductCategory } from "@/types/product"
-
-const slugToSvgKey: Record<string, string> = {
-  "milks-dairies": "milks",
-  "milk-diaries": "milks",
-  "wines-drinks": "wines",
-  "clothing-beauty": "clothing",
-  "pet-foods": "pet",
-  "baking-material": "baking",
-  "fresh-fruit": "fruit",
-  "fruits": "fruit",
-  "vegetables": "vegetables",
-  "bread-juice": "bread",
-  "fresh-seafood": "seafood",
-  "fast-food": "cake",
-  "cake-milk": "cake",
-  "coffee-teas": "coffee",
-  "cookies-teas": "coffee",
-  "meat": "seafood",
-  "breakfast": "baking",
-}
-
-function getSvgForSlug(slug: string): React.ReactNode | null {
-  const key = slugToSvgKey[slug]
-  return key ? categorySvgs[key] ?? null : null
-}
 
 interface HeaderProps {
   categories?: ProductCategory[]
   cartCount?: number
-  wishlistCount?: number
 }
 
-export function Header({ categories = [], cartCount = 0, wishlistCount = 0 }: HeaderProps) {
+export function Header({ categories = [], cartCount = 0 }: HeaderProps) {
+  const { wishlistIds } = useWishlist()
+  const wishlistCount = wishlistIds.length
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showMegaMenu, setShowMegaMenu] = useState(false)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
 
   const displayCategories = categories.slice(0, 10)
 
@@ -128,23 +108,23 @@ export function Header({ categories = [], cartCount = 0, wishlistCount = 0 }: He
               </div>
             </a>
 
-            <button className="relative p-2 hover:bg-muted rounded-lg transition-colors" aria-label="Wishlist">
+            <Link href="/wishlist" className="relative p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer" aria-label="Wishlist">
               <Heart className="h-5 w-5" />
               {wishlistCount > 0 && (
                 <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-brand-orange">
                   {wishlistCount}
                 </Badge>
               )}
-            </button>
+            </Link>
 
-            <button className="relative p-2 hover:bg-muted rounded-lg transition-colors" aria-label="Cart">
+            <Link href="/cart" className="relative p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer" aria-label="Cart">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
                 <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-brand-green">
                   {cartCount}
                 </Badge>
               )}
-            </button>
+            </Link>
           </div>
 
           {/* Mega Menu for Products - full width */}
@@ -190,12 +170,14 @@ export function Header({ categories = [], cartCount = 0, wishlistCount = 0 }: He
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             {/* Browse All Categories */}
-            <div className="relative group shrink-0">
+            <div className="relative shrink-0"
+              onMouseEnter={() => setShowCategoryDropdown(true)}
+              onMouseLeave={() => setShowCategoryDropdown(false)}>
               <button className="flex items-center gap-2 bg-brand-green text-white px-5 py-3 rounded-lg text-sm font-semibold hover:bg-brand-green/90 transition-colors">
                 Browse All Categories
-                <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showCategoryDropdown ? "rotate-180" : ""}`} />
               </button>
-              <div className="absolute top-full left-0 mt-2 w-[460px] bg-card border rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className={`absolute top-full left-0 mt-2 w-[460px] bg-card border rounded-xl shadow-xl z-50 transition-all duration-200 ${showCategoryDropdown ? "opacity-100 visible" : "opacity-0 invisible"}`}>
                 <div className="p-4">
                   {displayCategories.reduce((rows, cat, i) => {
                     if (i % 2 === 0) {
@@ -205,7 +187,13 @@ export function Header({ categories = [], cartCount = 0, wishlistCount = 0 }: He
                           {pair.map((c) => (
                             <a key={c.id} href={`/category/${c.slug}`}
                               className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors border">
-                              <span className="text-brand-green shrink-0">{getSvgForSlug(c.slug)}</span>
+                              {c.image ? (
+                                <span className="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-1 ring-border">
+                                  <img src={c.image} alt={c.name} className="w-full h-full object-cover" onError={handleImgError} />
+                                </span>
+                              ) : (
+                                <span className="text-brand-green shrink-0">{getCategorySvg(c.slug)}</span>
+                              )}
                               <span className="text-[13px] text-muted-foreground">{c.name}</span>
                             </a>
                           ))}
@@ -256,7 +244,13 @@ export function Header({ categories = [], cartCount = 0, wishlistCount = 0 }: He
               <a key={cat.id} href={`/category/${cat.slug}`}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm hover:bg-muted transition-colors"
                 onClick={() => setMobileMenuOpen(false)}>
-                <span className="text-brand-green shrink-0">{getSvgForSlug(cat.slug)}</span>
+                {cat.image ? (
+                  <span className="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-1 ring-border">
+                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" onError={handleImgError} />
+                  </span>
+                ) : (
+                  <span className="text-brand-green shrink-0">{getCategorySvg(cat.slug)}</span>
+                )}
                 <span className="font-medium">{cat.name}</span>
                 <span className="ml-auto text-xs text-muted-foreground">{cat.product_count}</span>
               </a>

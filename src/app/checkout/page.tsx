@@ -102,7 +102,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-background">
         <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={allCategories} cartCount={0} wishlistCount={1} />
+        <Header categories={allCategories} cartCount={0}  />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Checkout" }]} className="mb-8" />
           <div className="max-w-lg mx-auto text-center py-16">
@@ -129,7 +129,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background">
       <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={allCategories} cartCount={3} wishlistCount={1} />
+      <Header categories={allCategories} cartCount={3}  />
 
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} className="mb-6" />

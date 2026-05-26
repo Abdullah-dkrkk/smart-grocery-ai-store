@@ -178,7 +178,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={categories} cartCount={3} wishlistCount={1} />
+      <Header categories={categories} cartCount={3} />
 
       <main className="container mx-auto px-4 py-8 space-y-16">
         {/* Hero Banner with Leaf Drift animation */}

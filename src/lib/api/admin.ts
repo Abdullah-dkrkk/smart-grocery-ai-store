@@ -1,13 +1,13 @@
-import { get, post, del } from "./client"
+import { get, post, put, del } from "./client"
 import type { DashboardOverview, Order, Product, Category, User } from "./types"
 
 export const adminApi = {
   dashboard() {
-    return get<DashboardOverview>("/admin/dashboard")
+    return get<DashboardOverview>("/admin/dashboard/overview")
   },
 
   trends(params?: { period?: "7" | "30" | "90"; from?: string; to?: string }) {
-    return get<{ labels: string[]; revenue: number[]; orders: number[] }>("/admin/trends", params as Record<string, string | number | boolean | undefined>)
+    return get<{ labels: string[]; revenue: number[]; orders: number[] }>("/admin/dashboard/trends", params as Record<string, string | number | boolean | undefined>)
   },
 
   // Admin users
@@ -33,7 +33,7 @@ export const adminApi = {
   },
 
   updateCategory(id: number, data: FormData | Record<string, unknown>) {
-    return post<Category>(`/admin/categories/${id}`, data)
+    return put<Category>(`/admin/categories/${id}`, data)
   },
 
   deleteCategory(id: number) {

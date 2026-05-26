@@ -11,6 +11,15 @@ export interface AuthResponse {
   token: string
 }
 
+export interface ProductImage {
+  id: number
+  image_url: string
+  variation_type: string | null
+  alt_text: string | null
+  is_primary: boolean
+  sort_order: number
+}
+
 export interface Product {
   id: number
   name: string
@@ -19,6 +28,7 @@ export interface Product {
   price: string
   compare_at_price: string | null
   image_url: string | null
+  images: ProductImage[]
   category_id: number
   vendor_id: number | null
   stock_quantity: number

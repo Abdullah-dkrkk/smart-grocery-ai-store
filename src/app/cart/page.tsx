@@ -73,7 +73,7 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-background">
         <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={allCategories} cartCount={0} wishlistCount={1} />
+        <Header categories={allCategories} cartCount={0}  />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Cart" }]} className="mb-8" />
           <div className="text-center py-20">
@@ -93,7 +93,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-background">
       <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={allCategories} cartCount={items.length} wishlistCount={1} />
+      <Header categories={allCategories} cartCount={items.length}  />
 
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "Cart" }]} className="mb-6" />

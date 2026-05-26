@@ -1,5 +1,5 @@
 import { get, post, put, del } from "./client"
-import type { Product, Category, PaginatedResponse } from "./types"
+import type { Product, Category } from "./types"
 
 export interface ProductFilters {
   page?: number
@@ -24,7 +24,7 @@ export const productsApi = {
   },
 
   categories() {
-    return get<Category[]>("/categories")
+    return get<Category[]>("/products/categories")
   },
 
   featured() {

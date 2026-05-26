@@ -3,29 +3,9 @@
 import { useRef, useState, useCallback } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { categorySvgs } from "@/components/sections/category-icons"
+import { getCategorySvg } from "@/components/sections/category-icons"
+import { handleImgError } from "@/lib/utils/placeholder"
 import type { ProductCategory } from "@/types/product"
-
-const slugToSvgKey: Record<string, string> = {
-  "milks-dairies": "milks", "milk-diaries": "milks",
-  "wines-drinks": "wines",
-  "clothing-beauty": "clothing",
-  "pet-foods": "pet",
-  "baking-material": "baking",
-  "fresh-fruit": "fruit", "fruits": "fruit",
-  "vegetables": "vegetables",
-  "bread-juice": "bread",
-  "fresh-seafood": "seafood",
-  "fast-food": "cake",
-  "cake-milk": "cake",
-  "coffee-teas": "coffee", "cookies-teas": "coffee",
-  "meat": "seafood", "breakfast": "baking",
-}
-
-function getSvgForSlug(slug: string): React.ReactNode | null {
-  const key = slugToSvgKey[slug]
-  return key ? categorySvgs[key] ?? null : null
-}
 
 interface CategoryShowcaseProps {
   title: string
@@ -147,9 +127,15 @@ export function CategoryShowcase({
             {categories.map((cat, idx) => (
               <a key={cat.id} href={`/category/${cat.slug}`} draggable="false"
                 className={`group flex flex-col items-center justify-center text-center p-6 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-[160px] min-h-[200px] flex-shrink-0 snap-start ${getCategoryBg(idx)}`}>
-                <span className={`inline-flex items-center justify-center w-[68px] h-[68px] rounded-full text-2xl mb-3 transition-transform duration-200 group-hover:scale-110 ${getCategoryIconBg(idx)}`}>
-                  {getSvgForSlug(cat.slug)}
-                </span>
+                {cat.image ? (
+                  <span className="inline-flex items-center justify-center w-[68px] h-[68px] rounded-full overflow-hidden mb-3 ring-2 ring-white dark:ring-gray-800">
+                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" onError={handleImgError} />
+                  </span>
+                ) : (
+                  <span className={`inline-flex items-center justify-center w-[68px] h-[68px] rounded-full text-2xl mb-3 transition-transform duration-200 group-hover:scale-110 ${getCategoryIconBg(idx)}`}>
+                    {getCategorySvg(cat.slug)}
+                  </span>
+                )}
                 <span className="text-[15px] font-heading font-semibold leading-tight line-clamp-2">{cat.name}</span>
                 <span className="text-xs text-muted-foreground mt-1">{cat.product_count} items</span>
               </a>
