@@ -107,7 +107,7 @@ function DailyProductCard({ product }: { product: Product | null | undefined }) 
         <div className="mt-auto flex items-center justify-between pt-2">
           <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
           <Button
-            className="text-xs px-4 h-9 min-h-[42px] rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer"
+            className="text-xs px-4 h-9 min-h-[38px] rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer"
             onClick={handleAddToCart}
             disabled={cartState === "loading"}
           >

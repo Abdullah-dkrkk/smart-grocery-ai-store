@@ -8,8 +8,9 @@ const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isAuth = AUTH_ROUTES.includes(pathname)
+  const isDashboard = pathname.startsWith("/dashboard")
 
-  if (isAuth) {
+  if (isAuth || isDashboard) {
     return <>{children}</>
   }
 

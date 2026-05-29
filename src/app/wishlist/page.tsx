@@ -170,7 +170,7 @@ function WishlistCard({ product }: { product: Product }) {
             <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
           </div>
           <Button
-              className="w-full h-9 min-h-[42px] text-base rounded-[10px] bg-brand-green hover:bg-brand-green/90 text-white cursor-pointer uppercase"
+              className="w-full h-9 min-h-[38px] text-base rounded-[10px] bg-brand-green hover:bg-brand-green/90 text-white cursor-pointer uppercase"
             onClick={handleAddToCart}
             disabled={cartState === "loading"}
           >
