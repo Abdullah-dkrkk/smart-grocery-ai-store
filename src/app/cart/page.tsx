@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Footer } from "@/components/store/footer"
-import { Trash2, ShoppingBag, ArrowRight, Minus, Plus, Percent, X } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { ProductCategory } from "@/types/product"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Trash2, ShoppingBag, ArrowRight, Percent, X } from "lucide-react"
+import { useCartContext } from "@/lib/providers/cart-provider"
+import { useCategories } from "@/lib/hooks/use-categories"
 
 const announcements = [
   { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
@@ -20,60 +21,66 @@ const announcements = [
   { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
 ]
 
-const allCategories: ProductCategory[] = [
-  { id: 1, name: "Milks & Dairies", slug: "milks-dairies", description: "", image: "", icon: "", parent_id: null, product_count: 30 },
-  { id: 2, name: "Wines & Drinks", slug: "wines-drinks", description: "", image: "", icon: "", parent_id: null, product_count: 25 },
-  { id: 3, name: "Clothing & Beauty", slug: "clothing-beauty", description: "", image: "", icon: "", parent_id: null, product_count: 45 },
-  { id: 4, name: "Pet Foods & Toys", slug: "pet-foods", description: "", image: "", icon: "", parent_id: null, product_count: 18 },
-  { id: 5, name: "Baking Material", slug: "baking-material", description: "", image: "", icon: "", parent_id: null, product_count: 35 },
-  { id: 6, name: "Fresh Fruit", slug: "fresh-fruit", description: "", image: "", icon: "", parent_id: null, product_count: 50 },
-  { id: 7, name: "Vegetables", slug: "vegetables", description: "", image: "", icon: "", parent_id: null, product_count: 65 },
-  { id: 8, name: "Bread & Juice", slug: "bread-juice", description: "", image: "", icon: "", parent_id: null, product_count: 28 },
-  { id: 9, name: "Fresh Seafood", slug: "fresh-seafood", description: "", image: "", icon: "", parent_id: null, product_count: 22 },
-  { id: 10, name: "Fast Food", slug: "fast-food", description: "", image: "", icon: "", parent_id: null, product_count: 40 },
-  { id: 11, name: "Cake & Milk", slug: "cake-milk", description: "", image: "", icon: "", parent_id: null, product_count: 15 },
-  { id: 12, name: "Coffee & Teas", slug: "coffee-teas", description: "", image: "", icon: "", parent_id: null, product_count: 33 },
-]
-
-interface CartItem {
-  id: number
-  name: string
-  slug: string
-  price: number
-  image: string
-  quantity: number
-  stock: number
-}
-
-const initialItems: CartItem[] = [
-  { id: 1, name: "Seeds of Change Organic Quinoa", slug: "organic-quinoa", price: 28.85, image: "https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?w=200&h=200&fit=crop", quantity: 2, stock: 50 },
-  { id: 7, name: "Artisan Sourdough Bread Fresh Baked Daily", slug: "sourdough-bread", price: 6.99, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&h=200&fit=crop", quantity: 1, stock: 30 },
-  { id: 11, name: "Organic Fuji Apples Sweet & Crispy 3lb Bag", slug: "fuji-apples", price: 3.99, image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200&h=200&fit=crop", quantity: 3, stock: 100 },
-]
-
 export default function CartPage() {
-  const [items, setItems] = useState<CartItem[]>(initialItems)
+  const { items, itemCount, subtotal, updateQuantity, removeItem, loading } = useCartContext()
+  const { data: categories = [], isLoading: catLoading } = useCategories()
   const [promoCode, setPromoCode] = useState("")
   const [promoApplied, setPromoApplied] = useState(false)
 
-  function updateQuantity(id: number, quantity: number) {
-    setItems((prev) => prev.map((item) => item.id === id ? { ...item, quantity } : item))
-  }
-
-  function removeItem(id: number) {
-    setItems((prev) => prev.filter((item) => item.id !== id))
-  }
-
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = subtotal >= 50 ? 0 : 9.99
   const discount = promoApplied ? subtotal * 0.1 : 0
   const total = subtotal + shipping - discount
+
+  if (catLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AnnouncementBar announcements={announcements} interval={5000} />
+        <Header categories={categories} cartCount={0} />
+        <main className="container mx-auto px-4 py-8">
+          <Breadcrumbs items={[{ label: "Cart" }]} className="mb-6" />
+          <Skeleton className="h-9 w-64 mb-8" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-4 bg-card border rounded-xl p-4">
+                  <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-6 w-20" />
+                    <div className="flex items-center justify-between mt-3">
+                      <Skeleton className="h-8 w-28 rounded-md" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="lg:col-span-1">
+              <div className="bg-card border rounded-xl p-6 space-y-4">
+                <Skeleton className="h-6 w-32" />
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-px w-full" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-12 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <div className="mt-16"><Footer /></div>
+      </div>
+    )
+  }
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={allCategories} cartCount={0}  />
+        <Header categories={categories} cartCount={0} />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Cart" }]} className="mb-8" />
           <div className="text-center py-20">
@@ -93,36 +100,35 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-background">
       <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={allCategories} cartCount={items.length}  />
+      <Header categories={categories} cartCount={itemCount} />
 
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "Cart" }]} className="mb-6" />
         <h1 className="text-3xl font-heading font-semibold mb-8">Shopping Cart</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
               <div key={item.id} className="flex gap-4 bg-card border rounded-xl p-4 transition-shadow hover:shadow-sm">
-                <Link href={`/products/${item.slug}`} className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                <Link href={`/products/${item.product.slug}`} className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted">
+                  <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
                 </Link>
                 <div className="flex-1 min-w-0">
-                  <Link href={`/products/${item.slug}`} className="font-medium text-base hover:text-brand-green transition-colors line-clamp-1">
-                    {item.name}
+                  <Link href={`/products/${item.product.slug}`} className="font-medium text-base hover:text-brand-green transition-colors line-clamp-1">
+                    {item.product.name}
                   </Link>
-                  <p className="text-lg font-bold text-brand-green mt-1">${item.price.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-brand-green mt-1">${item.unit_price.toFixed(2)}</p>
                   <div className="flex items-center justify-between mt-3">
                     <QuantitySelector
                       value={item.quantity}
                       min={1}
-                      max={item.stock}
+                      max={item.product.stock}
                       onChange={(q) => updateQuantity(item.id, q)}
                       size="sm"
                     />
                     <div className="flex items-center gap-3">
-                      <span className="font-semibold text-sm">${(item.price * item.quantity).toFixed(2)}</span>
-                      <button onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                      <span className="font-semibold text-sm">${item.total.toFixed(2)}</span>
+                      <button onClick={() => removeItem(item.id, item.product_id)} className="text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -132,7 +138,6 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-card border rounded-xl p-6 sticky top-24 space-y-4">
               <h2 className="text-lg font-heading font-semibold">Order Summary</h2>
@@ -154,19 +159,17 @@ export default function CartPage() {
                 )}
               </div>
 
-              {/* Promo Code */}
               {!promoApplied ? (
                 <div className="flex gap-2">
                   <Input
                     placeholder="Promo code"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    className="h-9 text-sm"
+                    className="h-12 text-[14px]"
                   />
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="h-9"
+                    className="h-12"
                     onClick={() => { if (promoCode.trim()) setPromoApplied(true) }}
                   >
                     Apply
@@ -190,11 +193,11 @@ export default function CartPage() {
                 <span className="font-bold text-lg">${total.toFixed(2)}</span>
               </div>
 
-              <Link href="/checkout" className="inline-flex items-center justify-center w-full rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-12 text-base font-medium transition-all">
+              <Link href="/checkout" className="inline-flex items-center justify-center w-full rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-10 text-[14px] font-medium transition-all">
                 Proceed to Checkout <ArrowRight className="h-4 w-4 ml-2" />
               </Link>
 
-              <Link href="/products" className="inline-flex items-center justify-center w-full rounded-lg border border-border bg-background hover:bg-muted h-10 text-sm font-medium transition-all">
+              <Link href="/products" className="inline-flex items-center justify-center w-full rounded-lg border border-border bg-background hover:bg-muted h-10 text-[14px] font-medium transition-all">
                 Continue Shopping
               </Link>
             </div>

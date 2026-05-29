@@ -34,7 +34,7 @@ function DealProductCard({ product, discount }: { product: Product; discount: nu
   }
 
   return (
-    <div className="flex gap-4 bg-card border rounded-lg p-4 transition-shadow hover:shadow-md">
+    <div className="flex gap-4 bg-card border rounded-lg p-4 transition-shadow hover:shadow-md items-center">
       <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
         <img src={product.image} alt={product.name} className="h-full w-full object-cover" loading="lazy" onError={handleImgError} />
         {discount && discount > 0 && (
@@ -43,13 +43,11 @@ function DealProductCard({ product, discount }: { product: Product; discount: nu
           </span>
         )}
       </div>
-      <div className="flex flex-col justify-between min-w-0 flex-1">
-        <div>
-          <StarRating rating={product.rating} size="sm" showValue reviewCount={product.review_count} />
-          <h4 className="text-[17px] font-semibold leading-snug line-clamp-1 mt-1">{product.name}</h4>
-          <p className="text-xs text-muted-foreground">By Global Store</p>
-        </div>
-        <div className="flex items-center justify-between mt-2">
+      <div className="flex flex-col justify-center min-w-0 flex-1 gap-1">
+        <StarRating rating={product.rating} size="sm" showValue reviewCount={product.review_count} />
+        <h4 className="text-[17px] font-semibold leading-snug line-clamp-1 mt-0.5">{product.name}</h4>
+        <p className="text-xs text-muted-foreground">By Global Store</p>
+        <div className="flex items-center justify-between mt-1.5">
           <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
           <Button
             className="text-xs px-4 h-9 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer"
@@ -108,7 +106,7 @@ function DealsCountdown({ endDate }: { endDate: Date }) {
   )
 }
 
-export function DealsOfDay({
+export function DealsOfDayV2({
   title = "Deals Of The Day",
   subtitle,
   products = [],
@@ -138,8 +136,8 @@ export function DealsOfDay({
 
       <div className="grid lg:grid-cols-12 gap-6">
         {/* Featured Product */}
-        <div className="lg:col-span-5 bg-card border rounded-xl overflow-y-auto max-h-[560px] flex flex-col">
-          <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+        <div className="lg:col-span-5 bg-card border rounded-xl h-full flex flex-col">
+          <div className="relative aspect-[4/3] overflow-hidden bg-muted rounded-t-xl">
             <img src={fp.image} alt={fp.name} className="h-full w-full object-cover" loading="lazy" onError={handleImgError} />
             {fp.badge && (
               <Badge className="absolute top-3 left-3 bg-brand-green text-white text-xs px-2">{fp.badge}</Badge>
@@ -150,7 +148,7 @@ export function DealsOfDay({
               </Badge>
             )}
           </div>
-          <div className="p-5 space-y-4">
+          <div className="flex-1 p-5 flex flex-col justify-between gap-3">
             <div className="flex items-center justify-between">
               <StarRating rating={fp.rating} size="md" showValue reviewCount={fp.review_count} />
               <span className="text-xs text-muted-foreground">By Global Store</span>
@@ -167,14 +165,17 @@ export function DealsOfDay({
           </div>
         </div>
 
-        {/* Scrollable Deals */}
-        <div className="lg:col-span-7">
-          <div ref={scrollRef} className="space-y-4 max-h-[560px] overflow-y-auto pr-2
+        {/* Scrollable Deals Card */}
+        <div className="lg:col-span-7 bg-card border rounded-xl h-full flex flex-col">
+          <div className="px-4 py-3 border-b">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">More Deals</h4>
+          </div>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3
             [&::-webkit-scrollbar]:w-1.5
             [&::-webkit-scrollbar-track]:bg-muted/30
             [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20
             [&::-webkit-scrollbar-thumb]:rounded-full">
-            {safeProducts.slice(0, 6).map((product) => {
+            {safeProducts.slice(0, 8).map((product) => {
               if (!product) return null
               const dsc = !product.category_slug?.includes("seafood") && product.compare_price
                 ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)

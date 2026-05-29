@@ -13,6 +13,7 @@ import { SlidersHorizontal, X, ChevronDown, Grid3X3, List } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MOCK_PRODUCTS } from "@/lib/mock/products"
 import type { ProductCategory, ProductSortOption } from "@/types/product"
+import { useCartContext } from "@/lib/providers/cart-provider"
 
 const announcements = [
   { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
@@ -56,6 +57,7 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<ProductSortOption>("newest")
   const [currentPage, setCurrentPage] = useState(1)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+  const { addItem } = useCartContext()
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
@@ -284,7 +286,7 @@ export default function ProductsPage() {
                   <ProductGrid
                     products={paginated}
                     columns={3}
-                    onAddToCart={(p) => console.log("Add to cart", p.name)}
+                    onAddToCart={(p) => addItem(p)}
                     onToggleWishlist={(p) => console.log("Toggle wishlist", p.name)}
                   />
                 ) : (
@@ -305,7 +307,7 @@ export default function ProductsPage() {
                           </div>
                         </div>
                         <div className="flex items-center">
-                          <Button size="sm" className="bg-brand-green hover:bg-brand-green/90 text-white whitespace-nowrap">
+                          <Button size="sm" className="bg-brand-green hover:bg-brand-green/90 text-white whitespace-nowrap" onClick={() => addItem(product)}>
                             Add to cart
                           </Button>
                         </div>

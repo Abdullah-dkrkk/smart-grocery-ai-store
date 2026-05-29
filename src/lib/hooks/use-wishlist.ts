@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react"
 import type { Product } from "@/types/product"
 
 const WISHLIST_KEY = "wishlist_items"
+const WISHLIST_EVENT = "wishlist-updated"
 
 function getStoredWishlist(): number[] {
   if (typeof window === "undefined") return []
@@ -15,12 +16,21 @@ function getStoredWishlist(): number[] {
   }
 }
 
+function dispatchWishlistEvent() {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(WISHLIST_EVENT))
+}
+
 export function useWishlist() {
   const [wishlistIds, setWishlistIds] = useState<number[]>([])
   const [loadingId, setLoadingId] = useState<number | null>(null)
 
   useEffect(() => {
     setWishlistIds(getStoredWishlist())
+
+    const handler = () => setWishlistIds(getStoredWishlist())
+    window.addEventListener(WISHLIST_EVENT, handler)
+    return () => window.removeEventListener(WISHLIST_EVENT, handler)
   }, [])
 
   const isWishlisted = useCallback((productId: number) => {
@@ -35,6 +45,7 @@ export function useWishlist() {
       const exists = prev.includes(product.id)
       const next = exists ? prev.filter((id) => id !== product.id) : [...prev, product.id]
       localStorage.setItem(WISHLIST_KEY, JSON.stringify(next))
+      dispatchWishlistEvent()
       return next
     })
     setLoadingId(null)
@@ -48,6 +59,7 @@ export function useWishlist() {
       if (prev.includes(product.id)) return prev
       const next = [...prev, product.id]
       localStorage.setItem(WISHLIST_KEY, JSON.stringify(next))
+      dispatchWishlistEvent()
       return next
     })
     setLoadingId(null)
@@ -60,6 +72,7 @@ export function useWishlist() {
     setWishlistIds((prev) => {
       const next = prev.filter((id) => id !== productId)
       localStorage.setItem(WISHLIST_KEY, JSON.stringify(next))
+      dispatchWishlistEvent()
       return next
     })
     setLoadingId(null)

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Heart, Eye, Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Heart, Eye, Loader2, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
@@ -10,6 +10,7 @@ import { PriceDisplay } from "@/components/common/price-display"
 import { handleImgError } from "@/lib/utils/placeholder"
 import { useWishlist } from "@/lib/hooks/use-wishlist"
 import { useToast } from "@/components/ui/toast"
+import { useCartContext } from "@/lib/providers/cart-provider"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
 
@@ -40,10 +41,23 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
     : null
   const [hovered, setHovered] = useState(false)
+  const [cartState, setCartState] = useState<"idle" | "loading" | "added">("idle")
   const { isWishlisted, toggleWishlist, loadingId } = useWishlist()
   const { showToast } = useToast()
+  const { addItem } = useCartContext()
   const loading = loadingId === product.id
   const wishlisted = isWishlisted(product.id)
+
+  async function handleAddToCart() {
+    if (cartState === "loading" || !product) return
+    setCartState("loading")
+    await Promise.all([
+      addItem(product),
+      new Promise((r) => setTimeout(r, 500)),
+    ])
+    setCartState("added")
+    setTimeout(() => setCartState("idle"), 2000)
+  }
 
   return (
     <div className="w-[280px] flex-shrink-0 snap-start">
@@ -52,7 +66,7 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+        <div className="relative aspect-[28/31] overflow-hidden bg-muted">
           {loading && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
               <Loader2 className="h-8 w-8 animate-spin text-white" />
@@ -76,31 +90,44 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
             </Badge>
           )}
           <div className={`absolute inset-0 flex items-center justify-center gap-2 transition-opacity ${hovered ? "opacity-100" : "opacity-0"} bg-black/10`}>
-            <Button size="icon" variant="secondary" className="h-9 w-9 rounded-full shadow cursor-pointer"
+            <button
+              type="button"
+              className="h-9 w-9 rounded-full bg-white shadow flex items-center justify-center cursor-pointer outline-none focus:outline-none active:outline-none transition-transform hover:scale-105"
               onClick={async () => {
                 await toggleWishlist(product)
                 showToast(wishlisted ? "Removed from Wishlist" : "Added to Wishlist!")
               }}
             >
-              <Heart className={cn("h-4 w-4", wishlisted && "fill-red-500 text-red-500")} />
-            </Button>
+              <Heart className={cn("h-4 w-4 transition-colors", wishlisted && "fill-brand-green text-brand-green")} />
+            </button>
             <Link href={`/products/${product.slug}`}>
-              <Button size="icon" variant="secondary" className="h-9 w-9 rounded-full shadow cursor-pointer">
+              <button type="button" className="h-9 w-9 rounded-full bg-white shadow flex items-center justify-center cursor-pointer outline-none focus:outline-none active:outline-none transition-transform hover:scale-105">
                 <Eye className="h-4 w-4" />
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
         <div className="p-4 space-y-2">
           <StarRating rating={product.rating} size="sm" showValue reviewCount={product.review_count} />
-          <h3 className="text-[17px] font-semibold leading-snug line-clamp-2 min-h-[2.5em]">
+          <h3 className="text-[17px] font-semibold leading-snug line-clamp-2 min-h-[50px]">
             {product.name}
           </h3>
           <p className="text-xs text-muted-foreground">By SmartGrocery</p>
-          <div className="flex items-center justify-between pt-1">
-            <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
-            <Button className="h-8 text-xs px-4 rounded bg-brand-green hover:bg-brand-green/90 text-white">
-              Add
+          <div className="pt-2 space-y-2">
+            <div className="mb-3.5">
+              <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
+            </div>
+            <Button
+              className="w-full h-9 min-h-[42px] text-base rounded-[10px] bg-brand-green hover:bg-brand-green/90 text-white cursor-pointer uppercase"
+              onClick={handleAddToCart}
+              disabled={cartState === "loading"}
+            >
+              {cartState === "loading" ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : cartState === "added" ? (
+                <Check className="h-3 w-3 mr-1" />
+              ) : null}
+              {cartState === "added" ? "Added" : "Add to Cart"}
             </Button>
           </div>
         </div>

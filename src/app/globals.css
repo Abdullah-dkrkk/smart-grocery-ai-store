@@ -245,6 +245,15 @@ body {
   }
 }
 
+@keyframes toast-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes toast-out {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);

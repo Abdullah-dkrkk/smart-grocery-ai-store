@@ -3,8 +3,7 @@
 import { useRef, useState, useCallback } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getCategorySvg } from "@/components/sections/category-icons"
-import { handleImgError } from "@/lib/utils/placeholder"
+import { handleImgError, getCategoryPlaceholderImage } from "@/lib/utils/placeholder"
 import type { ProductCategory } from "@/types/product"
 
 interface CategoryShowcaseProps {
@@ -128,12 +127,12 @@ export function CategoryShowcase({
               <a key={cat.id} href={`/category/${cat.slug}`} draggable="false"
                 className={`group flex flex-col items-center justify-center text-center p-6 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-[160px] min-h-[200px] flex-shrink-0 snap-start ${getCategoryBg(idx)}`}>
                 {cat.image ? (
-                  <span className="inline-flex items-center justify-center w-[68px] h-[68px] rounded-full overflow-hidden mb-3 ring-2 ring-white dark:ring-gray-800">
+                  <span className="inline-flex items-center justify-center w-[50px] h-[50px] rounded-full overflow-hidden mb-3">
                     <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" onError={handleImgError} />
                   </span>
                 ) : (
-                  <span className={`inline-flex items-center justify-center w-[68px] h-[68px] rounded-full text-2xl mb-3 transition-transform duration-200 group-hover:scale-110 ${getCategoryIconBg(idx)}`}>
-                    {getCategorySvg(cat.slug)}
+                  <span className="inline-flex items-center justify-center w-[50px] h-[50px] rounded-full overflow-hidden mb-3">
+                    <img src={getCategoryPlaceholderImage(cat.slug)} alt={cat.name} className="w-full h-full object-cover" />
                   </span>
                 )}
                 <span className="text-[15px] font-heading font-semibold leading-tight line-clamp-2">{cat.name}</span>

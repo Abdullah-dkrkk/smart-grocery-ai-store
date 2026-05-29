@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/navbar"
 import { Providers } from "@/lib/providers"
+import { LayoutWrapper } from "@/components/layout/layout-wrapper"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,11 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${bricolageGrotesque.variable}`}>
+    <html lang="en" className={`${inter.variable} ${bricolageGrotesque.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh flex flex-col bg-background text-foreground">
         <Providers>
-          <Navbar />
-          <main className="flex-1">{children}</main>
+          <LayoutWrapper>{children}</LayoutWrapper>
         </Providers>
       </body>
     </html>

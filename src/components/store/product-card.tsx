@@ -69,17 +69,16 @@ export function ProductCard({
               {product.badge}
             </Badge>
           )}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          <button
+            type="button"
+            className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center outline-none focus:outline-none active:outline-none"
             onClick={async () => {
               await toggleWishlist(product)
               showToast(wishlisted ? "Removed from Wishlist" : "Added to Wishlist!")
             }}
           >
-            <Heart className={cn("h-3.5 w-3.5", wishlisted && "fill-red-500 text-red-500")} />
-          </Button>
+            <Heart className={cn("h-3.5 w-3.5 transition-colors", wishlisted && "fill-brand-green text-brand-green")} />
+          </button>
         </div>
 
         <CardContent className={cn("flex flex-col", isCompact ? "p-3 gap-1" : isHorizontal ? "p-3 flex-1" : "p-4 gap-2")}>

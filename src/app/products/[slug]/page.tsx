@@ -20,6 +20,7 @@ import { Footer } from "@/components/store/footer"
 import { useProductBySlug, useProduct } from "@/lib/hooks/use-products"
 import { useWishlist } from "@/lib/hooks/use-wishlist"
 import { useToast } from "@/components/ui/toast"
+import { useCartContext } from "@/lib/providers/cart-provider"
 import { Heart, Share2, Truck, ShieldCheck, RotateCcw, Check, Loader2, Store } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Product, ProductCategory } from "@/types/product"
@@ -95,6 +96,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug } = use(params)
   const { showToast } = useToast()
   const { isWishlisted, toggleWishlist, loadingId } = useWishlist()
+  const { addItem } = useCartContext()
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [activeTab, setActiveTab] = useState("description")
@@ -154,17 +156,16 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               {product.badge && (
                 <Badge className="absolute top-4 left-4 bg-brand-green text-white text-xs px-3 py-1">{product.badge}</Badge>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 bg-background/80 hover:bg-background cursor-pointer"
+              <button
+                type="button"
+                className="absolute top-4 right-4 bg-background/80 hover:bg-background cursor-pointer flex items-center justify-center h-10 w-10 rounded-full outline-none focus:outline-none active:outline-none border-0"
                 onClick={async () => {
                   await toggleWishlist(product)
                   showToast(wishlisted ? "Removed from Wishlist" : "Added to Wishlist!")
                 }}
               >
-                <Heart className={cn("h-5 w-5", wishlisted ? "fill-red-500 text-red-500" : "")} />
-              </Button>
+                <Heart className={cn("h-5 w-5 transition-colors", wishlisted ? "fill-brand-green text-brand-green" : "")} />
+              </button>
             </div>
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2 thin-scroll">
@@ -221,11 +222,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
             <div className="flex items-center gap-4 flex-wrap">
               <QuantitySelector value={quantity} min={1} max={product.stock} onChange={setQuantity} size="md" />
-              <AddToCartButton product={product} quantity={quantity} size="lg" className="flex-1 min-w-[160px]" />
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-12 w-12 cursor-pointer"
+              <AddToCartButton product={product} quantity={quantity} size="lg" className="flex-1 min-w-[160px]" onAddToCart={(p, q) => { addItem(p, q); return true }} />
+              <button
+                type="button"
+                className="h-12 w-12 cursor-pointer flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted transition-colors outline-none focus:outline-none active:outline-none"
                 onClick={async () => {
                   await toggleWishlist(product)
                   showToast(wishlisted ? "Removed from Wishlist" : "Added to Wishlist!")
@@ -234,9 +234,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <Heart className={cn("h-5 w-5", wishlisted ? "fill-red-500 text-red-500" : "")} />
+                  <Heart className={cn("h-5 w-5 transition-colors", wishlisted ? "fill-brand-green text-brand-green" : "")} />
                 )}
-              </Button>
+              </button>
               <Button variant="outline" size="icon" className="h-12 w-12 cursor-pointer"><Share2 className="h-5 w-5" /></Button>
             </div>
 

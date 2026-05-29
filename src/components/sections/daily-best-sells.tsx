@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
+import { Loader2, Check } from "lucide-react"
 import { handleImgError } from "@/lib/utils/placeholder"
+import { useCartContext } from "@/lib/providers/cart-provider"
 import type { Product } from "@/types/product"
 
 interface DailyBestSellsProps {
@@ -59,12 +61,25 @@ function CountdownTimer({ endDate }: { endDate: Date }) {
 function DailyProductCard({ product }: { product: Product | null | undefined }) {
   if (!product) return null
   const [hovered, setHovered] = useState(false)
+  const [cartState, setCartState] = useState<"idle" | "loading" | "added">("idle")
+  const { addItem } = useCartContext()
   const discount = !product.category_slug?.includes("seafood") && product.compare_price
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
     : null
   const badgeMap: Record<string, string> = {
     Hot: "bg-orange-500", Sale: "bg-red-500", New: "bg-emerald-500",
     Organic: "bg-green-600", Fresh: "bg-sky-500",
+  }
+
+  async function handleAddToCart() {
+    if (cartState === "loading" || !product) return
+    setCartState("loading")
+    await Promise.all([
+      addItem(product),
+      new Promise((r) => setTimeout(r, 500)),
+    ])
+    setCartState("added")
+    setTimeout(() => setCartState("idle"), 2000)
   }
 
   return (
@@ -91,8 +106,17 @@ function DailyProductCard({ product }: { product: Product | null | undefined }) 
         <p className="text-xs text-muted-foreground">By SmartGrocery</p>
         <div className="mt-auto flex items-center justify-between pt-2">
           <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
-          <Button className="text-xs px-4 h-9 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium">
-            Add to Cart
+          <Button
+            className="text-xs px-4 h-9 min-h-[42px] rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer"
+            onClick={handleAddToCart}
+            disabled={cartState === "loading"}
+          >
+            {cartState === "loading" ? (
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+            ) : cartState === "added" ? (
+              <Check className="h-3 w-3 mr-1" />
+            ) : null}
+            {cartState === "added" ? "Added" : "Add to Cart"}
           </Button>
         </div>
       </div>

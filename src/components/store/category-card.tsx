@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { getCategorySvg } from "@/components/sections/category-icons"
-import { handleImgError } from "@/lib/utils/placeholder"
+import { handleImgError, getCategoryPlaceholderImage } from "@/lib/utils/placeholder"
 import type { ProductCategory } from "@/types/product"
 
 interface CategoryCardProps {
@@ -17,12 +16,12 @@ export function CategoryCard({ category, onClick, className, variant = "default"
   const hasImage = !!category.image
 
   const iconEl = hasImage ? (
-    <span className="inline-flex items-center justify-center w-16 h-16 rounded-full overflow-hidden ring-2 ring-border shrink-0">
+    <span className="inline-flex items-center justify-center w-14 h-14 rounded-full overflow-hidden shrink-0">
       <img src={category.image} alt={category.name} className="w-full h-full object-cover" onError={handleImgError} />
     </span>
   ) : (
-    <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-brand-green/10 text-brand-green shrink-0">
-      {getCategorySvg(category.slug)}
+    <span className="inline-flex items-center justify-center w-14 h-14 rounded-full overflow-hidden shrink-0">
+      <img src={getCategoryPlaceholderImage(category.slug)} alt={category.name} className="w-full h-full object-cover" />
     </span>
   )
 

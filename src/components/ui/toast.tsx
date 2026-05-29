@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useCallback, createContext, useContext, type ReactNode } from "react"
-import { cn } from "@/lib/utils"
+import { useState, useCallback, createContext, useContext, useEffect, useRef, type ReactNode } from "react"
 import { CheckCircle, X } from "lucide-react"
+import gsap from "gsap"
 
 interface Toast {
   id: number
@@ -22,6 +22,56 @@ export function useToast() {
 
 let toastId = 0
 
+function ToastItem({
+  toast,
+  onRemove,
+}: {
+  toast: Toast
+  onRemove: (id: number) => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    gsap.fromTo(
+      el,
+      { x: -40, opacity: 0, scale: 0.95 },
+      { x: 0, opacity: 1, scale: 1, duration: 0.35, ease: "power2.out" },
+    )
+  }, [])
+
+  const handleClose = () => {
+    const el = ref.current
+    if (!el) return
+    gsap.to(el, {
+      x: -40,
+      opacity: 0,
+      scale: 0.95,
+      duration: 0.3,
+      ease: "power2.in",
+      onComplete: () => onRemove(toast.id),
+    })
+  }
+
+  return (
+    <div
+      ref={ref}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border border-white/10 text-sm font-medium pointer-events-auto ${
+        toast.type === "success"
+          ? "bg-brand-green text-white"
+          : "bg-destructive text-destructive-foreground"
+      }`}
+    >
+      <CheckCircle className="h-5 w-5 shrink-0" />
+      <span className="flex-1">{toast.message}</span>
+      <button onClick={handleClose} className="shrink-0 hover:opacity-70 cursor-pointer">
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
@@ -33,30 +83,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }, 3000)
   }, [])
 
-  const remove = (id: number) => {
+  const remove = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
-  }
+  }, [])
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-5 right-5 z-[999] flex flex-col gap-2 max-w-sm">
+      <div className="fixed bottom-5 left-5 z-[999] flex flex-col gap-2 max-w-sm">
         {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium animate-in slide-in-from-right zoom-in-95 duration-300",
-              toast.type === "success"
-                ? "bg-brand-green text-white border-brand-green/30"
-                : "bg-destructive text-destructive-foreground border-destructive/30"
-            )}
-          >
-            <CheckCircle className="h-5 w-5 shrink-0" />
-            <span className="flex-1">{toast.message}</span>
-            <button onClick={() => remove(toast.id)} className="shrink-0 hover:opacity-70">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <ToastItem key={toast.id} toast={toast} onRemove={remove} />
         ))}
       </div>
     </ToastContext.Provider>

@@ -29,7 +29,10 @@ export function AddToCartButton({
     if (state === "loading" || product.stock <= 0) return
     setState("loading")
     try {
-      await onAddToCart?.(product, quantity)
+      await Promise.all([
+        onAddToCart?.(product, quantity),
+        new Promise((r) => setTimeout(r, 500)),
+      ])
       setState("added")
       setTimeout(() => setState("idle"), 2000)
     } catch {
@@ -46,7 +49,7 @@ export function AddToCartButton({
       size={isIcon ? "icon" : size}
       variant={state === "added" ? "secondary" : "default"}
       className={cn(
-        "transition-all",
+        "transition-all min-h-[42px]",
         state === "added" && "bg-brand-green/10 text-brand-green border-brand-green/30 hover:bg-brand-green/20",
         className
       )}

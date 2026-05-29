@@ -1,7 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
-
 export const API_CONFIG = {
-  baseUrl: API_BASE_URL,
+  baseUrl: "/api-proxy",
   tokenKey: "auth_token",
   headers: {
     "Accept": "application/json",
