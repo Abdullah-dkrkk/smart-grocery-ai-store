@@ -14,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useCartContext } from "@/lib/providers/cart-provider"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { ordersApi } from "@/lib/api/orders"
-import { Trash2, CreditCard, Check, AlertCircle, Landmark, ShoppingBag, ArrowLeft } from "lucide-react"
+import { cartApi } from "@/lib/api/cart"
+import { Trash2, CreditCard, Check, AlertCircle, Landmark, ShoppingBag, ArrowLeft, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/toast"
 
@@ -49,6 +50,10 @@ export default function CheckoutPage() {
   })
   const [errors, setErrors] = useState<Partial<FormData>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [cardForm, setCardForm] = useState({
+    cardNumber: "", expirationMonth: "", expirationYear: "", cardCode: "", nameOnCard: "",
+  })
+  const [paymentError, setPaymentError] = useState("")
 
   const shipping = subtotal >= 50 ? 0 : 9.99
   const tax = subtotal * 0.1
@@ -82,15 +87,59 @@ export default function CheckoutPage() {
     setStep("confirm")
   }
 
+  async function syncCartToBackend() {
+    for (const item of items) {
+      try {
+        await cartApi.add({ product_id: item.product_id, quantity: item.quantity })
+      } catch {}
+    }
+  }
+
   async function handlePlaceOrder() {
     setSubmitting(true)
+    setPaymentError("")
     try {
-      const res = await ordersApi.checkout({
-        shipping_address: `${form.firstName} ${form.lastName}, ${form.address}, ${form.city}, ${form.state} ${form.zip}`,
-        shipping_phone: form.phone,
-        payment_method: paymentMethod === "authorize" ? "credit_card" : paymentMethod === "card" ? "credit_card" : "cash_on_delivery",
-        notes: "",
-      })
+      await syncCartToBackend()
+
+      if (paymentMethod === "authorize") {
+        const cardReq = {
+          cardNumber: cardForm.cardNumber.replace(/\s/g, ""),
+          expirationMonth: cardForm.expirationMonth,
+          expirationYear: cardForm.expirationYear,
+          cardCode: cardForm.cardCode,
+          amount: total,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          zip: form.zip,
+        }
+        const payRes = await fetch("/api/payment/authorize-net", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cardReq),
+        })
+        const payData = await payRes.json()
+        if (!payData.success) {
+          setPaymentError(payData.errorMessage || "Payment failed")
+          showToast(payData.errorMessage || "Payment failed", "error")
+          setSubmitting(false)
+          return
+        }
+        const notes = `Authorize.net Transaction: ${payData.transactionId} (Auth: ${payData.authCode})`
+        await ordersApi.checkout({
+          shipping_address: `${form.firstName} ${form.lastName}, ${form.address}, ${form.city}, ${form.state} ${form.zip}`,
+          shipping_phone: form.phone,
+          payment_method: "credit_card",
+          notes,
+        })
+      } else {
+        await ordersApi.checkout({
+          shipping_address: `${form.firstName} ${form.lastName}, ${form.address}, ${form.city}, ${form.state} ${form.zip}`,
+          shipping_phone: form.phone,
+          payment_method: paymentMethod === "card" ? "credit_card" : "cash_on_delivery",
+          notes: "",
+        })
+      }
       clearCart()
       setStep("success")
       showToast("Order placed successfully!")
@@ -195,11 +244,64 @@ export default function CheckoutPage() {
       </div>
 
       {paymentMethod === "authorize" && (
-        <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg border space-y-4">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Lock className="h-3 w-3 text-brand-green" />
+            <span>Encrypted &amp; secure — processed via Authorize.net Sandbox</span>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Card Number</label>
+            <Input
+              value={cardForm.cardNumber}
+              onChange={(e) => setCardForm((p) => ({ ...p, cardNumber: e.target.value.replace(/[^\d\s]/g, "").slice(0, 19) }))}
+              placeholder="4111 1111 1111 1111"
+              className="h-10 font-mono text-sm"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Month</label>
+              <Input
+                value={cardForm.expirationMonth}
+                onChange={(e) => setCardForm((p) => ({ ...p, expirationMonth: e.target.value.replace(/\D/g, "").slice(0, 2) }))}
+                placeholder="MM"
+                className="h-10 font-mono text-sm text-center"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Year</label>
+              <Input
+                value={cardForm.expirationYear}
+                onChange={(e) => setCardForm((p) => ({ ...p, expirationYear: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                placeholder="YYYY"
+                className="h-10 font-mono text-sm text-center"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5">CVV</label>
+              <Input
+                value={cardForm.cardCode}
+                onChange={(e) => setCardForm((p) => ({ ...p, cardCode: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                placeholder="123"
+                className="h-10 font-mono text-sm text-center"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Name on Card</label>
+            <Input
+              value={cardForm.nameOnCard}
+              onChange={(e) => setCardForm((p) => ({ ...p, nameOnCard: e.target.value }))}
+              placeholder="John Doe"
+              className="h-10 text-sm"
+            />
+          </div>
           <p className="text-xs text-muted-foreground">
-            You will be redirected to Authorize.net secure sandbox to complete payment.
-            Test card: <span className="font-mono text-foreground">4111 1111 1111 1111</span>
+            Test card: <span className="font-mono text-foreground">4111 1111 1111 1111</span> | Any future date | Any 3 digits CVV
           </p>
+          {paymentError && (
+            <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" />{paymentError}</p>
+          )}
         </div>
       )}
     </div>
@@ -213,7 +315,7 @@ export default function CheckoutPage() {
         <p><span className="font-medium text-foreground">Email:</span> {form.email}</p>
         <p><span className="font-medium text-foreground">Phone:</span> {form.phone}</p>
         <p><span className="font-medium text-foreground">Payment:</span> {
-          paymentMethod === "authorize" ? "Authorize.net" :
+          paymentMethod === "authorize" ? `Authorize.net ••••${cardForm.cardNumber.replace(/\s/g, "").slice(-4)}` :
           paymentMethod === "card" ? "Credit/Debit Card" : "Cash on Delivery"
         }</p>
       </div>
@@ -321,7 +423,7 @@ export default function CheckoutPage() {
             <h1 className="text-2xl font-heading font-semibold mb-3">Order Placed Successfully!</h1>
             <p className="text-muted-foreground mb-2">Thank you for your order. You&apos;ll receive a confirmation email shortly.</p>
             <p className="text-xs text-muted-foreground mb-8">
-              Payment method: {paymentMethod === "authorize" ? "Authorize.net" : paymentMethod === "card" ? "Credit/Debit Card" : "Cash on Delivery"}
+              Payment method: {paymentMethod === "authorize" ? "Authorize.net (Sandbox)" : paymentMethod === "card" ? "Credit/Debit Card" : "Cash on Delivery"}
             </p>
         <div className="space-y-3">
               <Link href="/products" className="inline-flex items-center justify-center rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-10 px-6 text-sm font-medium transition-all">

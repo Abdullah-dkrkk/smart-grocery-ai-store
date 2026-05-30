@@ -46,9 +46,13 @@ function apiItemToCartItem(i: any): CartItem {
 }
 
 async function fetchCartFromApi(): Promise<CartItem[]> {
-  const res = await cartApi.list()
-  if (!res?.data?.items) return []
-  return res.data.items.map(apiItemToCartItem)
+  try {
+    const res = await cartApi.list()
+    if (!res?.data?.items) return []
+    return res.data.items.map(apiItemToCartItem)
+  } catch {
+    return []
+  }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -123,10 +127,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, showToast])
 
   const clearCart = useCallback(() => {
-    cartApi.clear()
-      .then(() => setItems([]))
-      .catch(() => showToast("Failed to clear cart", "error"))
-  }, [showToast])
+    setItems([])
+    cartApi.clear().catch(() => {})
+  }, [])
 
   return (
     <CartContext.Provider

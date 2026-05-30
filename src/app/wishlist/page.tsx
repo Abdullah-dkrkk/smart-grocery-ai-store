@@ -144,7 +144,7 @@ function WishlistCard({ product }: { product: Product }) {
           className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center outline-none focus:outline-none active:outline-none"
           onClick={async () => {
             await toggleWishlist(product)
-            showToast(wishlisted ? "Removed from Wishlist" : "Added to Wishlist!")
+            showToast(!wishlisted ? "Added to Wishlist!" : "Removed from Wishlist")
           }}
           disabled={loading}
         >
@@ -170,7 +170,7 @@ function WishlistCard({ product }: { product: Product }) {
             <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
           </div>
           <Button
-              className="w-full h-9 min-h-[38px] text-base rounded-[10px] bg-brand-green hover:bg-brand-green/90 text-white cursor-pointer uppercase"
+              className="w-full h-9 text-[12px] rounded-[6px] bg-brand-green hover:bg-brand-green/90 text-white cursor-pointer uppercase"
             onClick={handleAddToCart}
             disabled={cartState === "loading"}
           >

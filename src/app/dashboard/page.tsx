@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { DashboardContent } from "@/components/dashboard/dashboard-content"
@@ -20,6 +20,14 @@ const roleInitials: Record<Role, string> = {
 }
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContentInner />
+    </Suspense>
+  )
+}
+
+function DashboardContentInner() {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get("role") as Role | null
   const currentRole: Role = roleParam && validRoles.includes(roleParam) ? roleParam : "user"

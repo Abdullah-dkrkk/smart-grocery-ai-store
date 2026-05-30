@@ -49,7 +49,7 @@ export function AddToCartButton({
       size={isIcon ? "icon" : size}
       variant={state === "added" ? "secondary" : "default"}
       className={cn(
-        "transition-all min-h-[38px]",
+        "transition-all h-9 rounded-[6px] text-[12px]",
         state === "added" && "bg-brand-green/10 text-brand-green border-brand-green/30 hover:bg-brand-green/20",
         className
       )}

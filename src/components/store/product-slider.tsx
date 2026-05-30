@@ -93,9 +93,10 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
             <button
               type="button"
               className="h-9 w-9 rounded-full bg-white shadow flex items-center justify-center cursor-pointer outline-none focus:outline-none active:outline-none transition-transform hover:scale-105"
+              disabled={loading}
               onClick={async () => {
                 await toggleWishlist(product)
-                showToast(wishlisted ? "Removed from Wishlist" : "Added to Wishlist!")
+                showToast(!wishlisted ? "Added to Wishlist!" : "Removed from Wishlist")
               }}
             >
               <Heart className={cn("h-4 w-4 transition-colors", wishlisted && "fill-brand-green text-brand-green")} />
@@ -118,7 +119,7 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
               <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
             </div>
             <Button
-              className="w-full h-9 min-h-[38px] text-base rounded-[10px] bg-brand-green hover:bg-brand-green/90 text-white cursor-pointer uppercase"
+              className="w-full h-9 text-[12px] rounded-[6px] bg-brand-green hover:bg-brand-green/90 text-white cursor-pointer uppercase"
               onClick={handleAddToCart}
               disabled={cartState === "loading"}
             >

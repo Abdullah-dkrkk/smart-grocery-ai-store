@@ -22,23 +22,23 @@ interface RecentOrderRowProps {
 
 export function RecentOrderRow({ id, customer, items, total, status, time }: RecentOrderRowProps) {
   return (
-    <div className="flex items-center justify-between py-3 border-b last:border-0">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium">
-          {customer ? customer.charAt(0) : id.charAt(id.length - 1)}
+    <tr className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+      <td className="py-3 pl-5 pr-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-medium">
+            {customer ? customer.charAt(0) : id.charAt(id.length - 1)}
+          </div>
+          <span className="text-sm font-medium">{id}</span>
         </div>
-        <div className="min-w-0">
-          <p className="text-base font-medium truncate">{customer ?? `Order ${id}`}</p>
-          <p className="text-sm text-muted-foreground">{id} &middot; {items} items</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-4 shrink-0">
-        <span className="text-base font-medium">${total}</span>
-        <Badge variant="outline" className={cn("text-xs font-medium", statusStyles[status])}>
+      </td>
+      <td className="py-3 px-3 text-sm text-muted-foreground whitespace-nowrap">{items} item{items !== 1 ? "s" : ""}</td>
+      <td className="py-3 px-3 text-sm font-semibold whitespace-nowrap">${total}</td>
+      <td className="py-3 px-3">
+        <Badge variant="outline" className={cn("text-[11px] font-medium px-2 py-0.5", statusStyles[status])}>
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
-        <span className="text-sm text-muted-foreground w-20 text-right">{time}</span>
-      </div>
-    </div>
+      </td>
+      <td className="py-3 pl-3 pr-5 text-xs text-muted-foreground whitespace-nowrap text-right">{time}</td>
+    </tr>
   )
 }
