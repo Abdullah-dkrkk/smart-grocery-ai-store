@@ -87,7 +87,7 @@ export default function CartPage() {
             <ShoppingBag className="h-20 w-20 mx-auto text-muted-foreground/30 mb-6" />
             <h1 className="text-2xl font-heading font-semibold mb-3">Your cart is empty</h1>
             <p className="text-muted-foreground mb-8">Looks like you haven&apos;t added anything yet.</p>
-            <Link href="/products" className="inline-flex items-center justify-center rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-10 px-6 text-sm font-medium transition-all">
+            <Link href="/products" className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand-green/30 bg-brand-green-light dark:bg-brand-green/10 px-6 py-2 text-[14px] font-medium text-brand-green transition-all hover:bg-brand-green/15 dark:hover:bg-brand-green/20 hover:border-brand-green/50 active:translate-y-px">
               Continue Shopping
             </Link>
           </div>
@@ -197,7 +197,7 @@ export default function CartPage() {
                 Proceed to Checkout <ArrowRight className="h-4 w-4 ml-2" />
               </Link>
 
-              <Link href="/products" className="inline-flex items-center justify-center w-full rounded-lg border border-border bg-background hover:bg-muted h-10 text-[14px] font-medium transition-all">
+              <Link href="/products" className="inline-flex items-center justify-center w-full gap-1.5 rounded-lg border border-brand-green/30 bg-brand-green-light dark:bg-brand-green/10 px-4 py-2 text-[14px] font-medium text-brand-green transition-all hover:bg-brand-green/15 dark:hover:bg-brand-green/20 hover:border-brand-green/50 active:translate-y-px">
                 Continue Shopping
               </Link>
             </div>
