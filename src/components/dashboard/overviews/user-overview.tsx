@@ -2,29 +2,44 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { ShoppingBag, Clock, Star, DollarSign, Truck } from "lucide-react"
+import { ShoppingBag, Clock, Star, DollarSign, Truck, AlertCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { StatCard } from "@/components/dashboard/common/stat-card"
 import { RecentOrderRow } from "@/components/dashboard/common/recent-order-row"
-import { dashboardApi, type CustomerOverview } from "@/lib/api/dashboard"
+import { ordersApi } from "@/lib/api/orders"
+import type { Order } from "@/lib/api/types"
 import { setAuthToken } from "@/lib/api/config"
+import Link from "next/link"
 
 export function UserOverview() {
   const { data: session, status } = useSession()
-  const [data, setData] = useState<CustomerOverview | null>(null)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [totalOrders, setTotalOrders] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (status !== "authenticated" || !session?.user?.token) return
+    if (status === "loading") return
+    if (status !== "authenticated" || !session?.user?.token) {
+      setLoading(false)
+      setError("Please sign in to view your dashboard.")
+      return
+    }
     setAuthToken(session.user.token)
-    dashboardApi.customerOverview()
-      .then((res) => setData(res.data))
-      .catch(() => setData(null))
+
+    ordersApi.history(1, 50)
+      .then((res) => {
+        const allOrders = res.data || []
+        setOrders(allOrders)
+        setTotalOrders(allOrders.length)
+      })
+      .catch((err) => setError(err.message || "Something went wrong. Please try again."))
       .finally(() => setLoading(false))
   }, [status, session])
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="space-y-6">
         <div>
@@ -35,6 +50,40 @@ export function UserOverview() {
     )
   }
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-semibold">Dashboard</h2>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Unable to load dashboard</h3>
+            <p className="text-sm text-muted-foreground max-w-md mb-6">{error}</p>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+              <Link href="/products">
+                <Button variant="default">
+                  <ShoppingBag className="h-4 w-4 mr-2" />
+                  Continue Shopping
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const pendingOrders = orders.filter((o) => o.status === "pending" || o.status === "processing")
+  const totalSpent = orders.reduce((sum, o) => sum + Number.parseFloat(o.total_amount || "0"), 0)
+  const recentOrders = orders.slice(0, 5)
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,10 +92,10 @@ export function UserOverview() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={ShoppingBag} label="Total Orders" value={String(data.total_orders)} color="bg-brand-green/10 text-brand-green" />
-        <StatCard icon={Clock} label="Pending Delivery" value={String(data.pending_deliveries)} positive={false} color="bg-yellow-50 text-yellow-600" />
-        <StatCard icon={Star} label="Reviews Given" value={String(data.reviews_given)} color="bg-brand-orange/10 text-brand-orange" />
-        <StatCard icon={DollarSign} label="Total Spent" value={`$${data.total_spent.toFixed(2)}`} color="bg-blue-50 text-blue-600" />
+        <StatCard icon={ShoppingBag} label="Total Orders" value={String(totalOrders)} color="bg-brand-green/10 text-brand-green" />
+        <StatCard icon={Clock} label="Pending Delivery" value={String(pendingOrders.length)} positive={false} color="bg-yellow-50 text-yellow-600" />
+        <StatCard icon={Star} label="Reviews Given" value="0" color="bg-brand-orange/10 text-brand-orange" />
+        <StatCard icon={DollarSign} label="Total Spent" value={`$${totalSpent.toFixed(2)}`} color="bg-blue-50 text-blue-600" />
       </div>
 
       <Card>
@@ -54,7 +103,7 @@ export function UserOverview() {
           <CardTitle>Recent Orders</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {data.recent_orders.length === 0 ? (
+          {recentOrders.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">No orders yet. Start shopping!</p>
           ) : (
             <table className="w-full">
@@ -68,12 +117,12 @@ export function UserOverview() {
                 </tr>
               </thead>
               <tbody>
-                {data.recent_orders.map((order) => (
+                {recentOrders.map((order) => (
                   <RecentOrderRow
                     key={order.id}
                     id={order.order_number}
-                    items={order.item_count}
-                    total={order.total_amount.toFixed(2)}
+                    items={order.items?.length || 0}
+                    total={Number.parseFloat(order.total_amount || "0").toFixed(2)}
                     status={order.status as "pending" | "processing" | "shipped" | "delivered" | "cancelled"}
                     time={order.created_at}
                   />
@@ -90,19 +139,19 @@ export function UserOverview() {
             <CardTitle>Upcoming Deliveries</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {data.upcoming_deliveries.length === 0 ? (
+            {orders.filter((o) => o.status === "shipped").length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center">No upcoming deliveries.</p>
             ) : (
-              data.upcoming_deliveries.map((d) => (
-                <div key={d.id} className="flex items-start gap-3">
+              orders.filter((o) => o.status === "shipped").slice(0, 5).map((o) => (
+                <div key={o.id} className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-green/10">
                     <Truck className="h-5 w-5 text-brand-green" />
                   </div>
                   <div>
-                    <p className="text-base font-medium">{d.scheduled_date ? new Date(d.scheduled_date).toLocaleString() : "Not scheduled"}</p>
-                    <p className="text-sm text-muted-foreground">{d.items_summary}</p>
+                    <p className="text-base font-medium">Order #{o.order_number}</p>
+                    <p className="text-sm text-muted-foreground">{o.items?.length || 0} item(s)</p>
                     <Badge variant="outline" className="mt-1 text-xs bg-brand-green/5 text-brand-green border-brand-green/20">
-                      {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
+                      {o.status.charAt(0).toUpperCase() + o.status.slice(1)}
                     </Badge>
                   </div>
                 </div>
@@ -116,24 +165,7 @@ export function UserOverview() {
             <CardTitle>Recommended for You</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 pt-4">
-            {data.recommended_products.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No recommendations yet.</p>
-            ) : (
-              data.recommended_products.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-green-light text-brand-green text-base font-bold">
-                    {item.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-medium truncate">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
-                  </div>
-                  {item.discount_percent && (
-                    <Badge className="bg-brand-orange/10 text-brand-orange text-xs">{item.discount_percent}% OFF</Badge>
-                  )}
-                </div>
-              ))
-            )}
+            <p className="text-sm text-muted-foreground py-4 text-center">Recommendations coming soon.</p>
           </CardContent>
         </Card>
       </div>
