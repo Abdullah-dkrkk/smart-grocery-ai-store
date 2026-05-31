@@ -42,6 +42,8 @@ export function AddToCartButton({
 
   const isIcon = variant === "icon"
 
+  const heightMap = { sm: "h-9", default: "h-10", lg: "h-12" }
+
   return (
     <Button
       onClick={handleClick}
@@ -49,7 +51,8 @@ export function AddToCartButton({
       size={isIcon ? "icon" : size}
       variant={state === "added" ? "secondary" : "default"}
       className={cn(
-        "transition-all h-9 rounded-[6px] text-[12px]",
+        "transition-all rounded-lg text-[13px] font-medium",
+        heightMap[size],
         state === "added" && "bg-brand-green/10 text-brand-green border-brand-green/30 hover:bg-brand-green/20",
         className
       )}

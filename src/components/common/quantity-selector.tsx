@@ -32,8 +32,8 @@ export function QuantitySelector({
   return (
     <div
       className={cn(
-        "inline-flex items-center border rounded-md",
-        isSmall ? "h-7" : "h-9",
+        "inline-flex items-center border rounded-lg",
+        isSmall ? "h-9" : "h-12",
         className
       )}
     >
@@ -43,15 +43,15 @@ export function QuantitySelector({
         onClick={() => change(-1)}
         className={cn(
           "flex items-center justify-center transition-colors hover:bg-muted disabled:opacity-30 disabled:pointer-events-none",
-          isSmall ? "h-full w-7" : "h-full w-9"
+          isSmall ? "h-full w-7" : "h-full w-10"
         )}
       >
-        <Minus className={isSmall ? "h-3 w-3" : "h-3.5 w-3.5"} />
+        <Minus className={isSmall ? "h-3 w-3" : "h-4 w-4"} />
       </button>
       <span
         className={cn(
           "font-medium text-center select-none border-x",
-          isSmall ? "text-sm min-w-[28px] h-full leading-7" : "text-base min-w-[36px] h-full leading-9"
+          isSmall ? "text-sm min-w-[28px] h-full leading-9" : "text-base min-w-[40px] h-full leading-12"
         )}
       >
         {value}
@@ -62,10 +62,10 @@ export function QuantitySelector({
         onClick={() => change(1)}
         className={cn(
           "flex items-center justify-center transition-colors hover:bg-muted disabled:opacity-30 disabled:pointer-events-none",
-          isSmall ? "h-full w-7" : "h-full w-9"
+          isSmall ? "h-full w-7" : "h-full w-10"
         )}
       >
-        <Plus className={isSmall ? "h-3 w-3" : "h-3.5 w-3.5"} />
+        <Plus className={isSmall ? "h-3 w-3" : "h-4 w-4"} />
       </button>
     </div>
   )

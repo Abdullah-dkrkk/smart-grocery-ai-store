@@ -85,21 +85,21 @@ export function UserOverview() {
   const recentOrders = orders.slice(0, 5)
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-8">
+      <div className="space-y-2">
         <h2 className="text-2xl font-semibold">Welcome back{session?.user?.name ? `, ${session.user.name}` : ""}!</h2>
         <p className="text-base text-muted-foreground">Here is what is happening with your orders today.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard icon={ShoppingBag} label="Total Orders" value={String(totalOrders)} color="bg-brand-green/10 text-brand-green" />
         <StatCard icon={Clock} label="Pending Delivery" value={String(pendingOrders.length)} positive={false} color="bg-yellow-50 text-yellow-600" />
         <StatCard icon={Star} label="Reviews Given" value="0" color="bg-brand-orange/10 text-brand-orange" />
         <StatCard icon={DollarSign} label="Total Spent" value={`$${totalSpent.toFixed(2)}`} color="bg-blue-50 text-blue-600" />
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
+      <Card className="pb-0">
+        <CardHeader>
           <CardTitle>Recent Orders</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -109,11 +109,11 @@ export function UserOverview() {
             <table className="w-full">
               <thead>
                 <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="py-3 pl-5 pr-3 font-medium">Order</th>
-                  <th className="py-3 px-3 font-medium">Items</th>
-                  <th className="py-3 px-3 font-medium">Total</th>
-                  <th className="py-3 px-3 font-medium">Status</th>
-                  <th className="py-3 pl-3 pr-5 font-medium text-right">Date</th>
+                  <th className="py-3.5 pl-5 pr-3 font-medium">Order</th>
+                  <th className="py-3.5 px-3 font-medium">Items</th>
+                  <th className="py-3.5 px-3 font-medium">Total</th>
+                  <th className="py-3.5 px-3 font-medium">Status</th>
+                  <th className="py-3.5 pl-3 pr-5 font-medium text-right">Date</th>
                 </tr>
               </thead>
               <tbody>

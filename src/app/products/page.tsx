@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
+import Link from "next/link"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
 import { FilterSidebar } from "@/components/store/filter-sidebar"
@@ -9,34 +10,20 @@ import { Pagination } from "@/components/store/pagination"
 import { SearchBar } from "@/components/store/search-bar"
 import { Footer } from "@/components/store/footer"
 import { Button } from "@/components/ui/button"
-import { SlidersHorizontal, X, ChevronDown, Grid3X3, List } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SlidersHorizontal, X, ChevronDown, Grid3X3, List, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { MOCK_PRODUCTS } from "@/lib/mock/products"
-import type { ProductCategory, ProductSortOption } from "@/types/product"
+import { useProducts } from "@/lib/hooks/use-products"
+import { useCategories } from "@/lib/hooks/use-categories"
+import type { Product, ProductCategory, ProductSortOption } from "@/types/product"
 import { useCartContext } from "@/lib/providers/cart-provider"
+import { Breadcrumbs } from "@/components/common/breadcrumbs"
 
 const announcements = [
   { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
   { text: "Free delivery on orders over $50 — shop now!" },
   { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
 ]
-
-const categories: ProductCategory[] = [
-  { id: 1, name: "Milks & Dairies", slug: "milks-dairies", description: "", image: "", icon: "", parent_id: null, product_count: 30 },
-  { id: 2, name: "Wines & Drinks", slug: "wines-drinks", description: "", image: "", icon: "", parent_id: null, product_count: 25 },
-  { id: 3, name: "Clothing & Beauty", slug: "clothing-beauty", description: "", image: "", icon: "", parent_id: null, product_count: 45 },
-  { id: 4, name: "Pet Foods & Toys", slug: "pet-foods", description: "", image: "", icon: "", parent_id: null, product_count: 18 },
-  { id: 5, name: "Baking Material", slug: "baking-material", description: "", image: "", icon: "", parent_id: null, product_count: 35 },
-  { id: 6, name: "Fresh Fruit", slug: "fresh-fruit", description: "", image: "", icon: "", parent_id: null, product_count: 50 },
-  { id: 7, name: "Vegetables", slug: "vegetables", description: "", image: "", icon: "", parent_id: null, product_count: 65 },
-  { id: 8, name: "Bread & Juice", slug: "bread-juice", description: "", image: "", icon: "", parent_id: null, product_count: 28 },
-  { id: 9, name: "Fresh Seafood", slug: "fresh-seafood", description: "", image: "", icon: "", parent_id: null, product_count: 22 },
-  { id: 10, name: "Fast Food", slug: "fast-food", description: "", image: "", icon: "", parent_id: null, product_count: 40 },
-  { id: 11, name: "Cake & Milk", slug: "cake-milk", description: "", image: "", icon: "", parent_id: null, product_count: 15 },
-  { id: 12, name: "Coffee & Teas", slug: "coffee-teas", description: "", image: "", icon: "", parent_id: null, product_count: 33 },
-]
-
-const allProducts = MOCK_PRODUCTS
 
 const ITEMS_PER_PAGE = 12
 
@@ -61,6 +48,9 @@ export default function ProductsPage() {
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
+  const { data: allProducts = [], isLoading: prodLoading } = useProducts({ per_page: 100 })
+  const { data: categories = [], isLoading: catLoading } = useCategories()
+
   const filtered = useMemo(() => {
     let result = [...allProducts]
 
@@ -70,7 +60,7 @@ export default function ProductsPage() {
     }
 
     if (selectedCategoryId) {
-      const cat = categories.find((c) => c.id === selectedCategoryId)
+      const cat = categories.find((c: ProductCategory) => c.id === selectedCategoryId)
       if (cat) result = result.filter((p) => p.category_name.toLowerCase() === cat.name.toLowerCase())
     }
 
@@ -88,7 +78,7 @@ export default function ProductsPage() {
     }
 
     return result
-  }, [searchQuery, selectedCategoryId, minPrice, maxPrice, selectedRating, sortBy])
+  }, [searchQuery, selectedCategoryId, minPrice, maxPrice, selectedRating, sortBy, allProducts, categories])
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
   const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
@@ -138,15 +128,12 @@ export default function ProductsPage() {
       <Header categories={categories} cartCount={3} />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb + Page Title */}
-        <div className="mb-6">
-          <nav className="text-sm text-muted-foreground mb-2">
-            <a href="/" className="hover:text-brand-green transition-colors">Home</a>
-            <span className="mx-2">/</span>
-            <span className="text-foreground font-medium">Products</span>
-          </nav>
-          <h1 className="text-3xl font-heading font-semibold">All Products</h1>
-        </div>
+        {/* Breadcrumb */}
+        <Breadcrumbs
+          items={[{ label: "Products" }]}
+          className="mb-6"
+        />
+        <h1 className="text-3xl font-heading font-semibold mb-6">All Products</h1>
 
         <div className="flex gap-8">
           {/* Sidebar - Desktop */}
@@ -257,7 +244,7 @@ export default function ProductsPage() {
                 )}
                 {selectedCategoryId && (
                   <span className="inline-flex items-center gap-1 text-xs bg-brand-green/10 text-brand-green px-2.5 py-1 rounded-full">
-                    {categories.find((c) => c.id === selectedCategoryId)?.name}
+                    {categories.find((c: ProductCategory) => c.id === selectedCategoryId)?.name}
                     <button onClick={() => handleCategoryChange(undefined)} className="hover:text-brand-green/70"><X className="h-3 w-3" /></button>
                   </span>
                 )}
@@ -328,11 +315,16 @@ export default function ProductsPage() {
                 )}
               </>
             ) : (
-              <div className="text-center py-20">
-                <div className="text-6xl mb-4 opacity-30">🔍</div>
-                <h3 className="text-xl font-heading font-semibold mb-2">No products found</h3>
+              <div className="text-center py-24">
+                <Search className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                <h2 className="text-2xl font-heading font-semibold mb-2">No products found</h2>
                 <p className="text-muted-foreground mb-6">Try adjusting your filters or search query</p>
-                <Button onClick={handleReset} variant="outline">Reset all filters</Button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Button onClick={handleReset} variant="outline">Reset all filters</Button>
+                  <Link href="/categories">
+                    <Button className="bg-brand-green hover:bg-brand-green/90 text-white">Browse All Categories</Button>
+                  </Link>
+                </div>
               </div>
             )}
           </div>

@@ -25,6 +25,7 @@ export interface Product {
   name: string
   slug: string
   description: string
+  short_description: string | null
   price: string
   compare_at_price: string | null
   image_url: string | null
@@ -38,6 +39,10 @@ export interface Product {
   nutrition_data: Record<string, unknown> | null
   sku: string | null
   weight_kg: string | null
+  badge: string | null
+  unit: string | null
+  avg_rating: number | null
+  reviews_count: number | null
   category?: Category
   vendor?: User
   created_at: string
@@ -54,6 +59,7 @@ export interface Category {
   is_active: boolean
   children?: Category[]
   product_count?: number
+  products_count?: number
 }
 
 export interface CartItem {
@@ -87,6 +93,7 @@ export interface Order {
   shipping_phone: string | null
   notes: string | null
   items: OrderItem[]
+  user?: { id: number; name: string; email?: string }
   created_at: string
 }
 
@@ -127,6 +134,40 @@ export interface DietPlan {
   daily_meals: unknown[]
   total_calories: number
   duration_days: number
+}
+
+export interface ReviewItem {
+  id: number
+  user_id: number
+  product_id: number
+  order_id: number | null
+  rating: number
+  comment: string | null
+  vendor_reply: string | null
+  vendor_replied_at: string | null
+  user: { id: number; name: string }
+  created_at: string
+}
+
+export interface ReviewResponse {
+  data: ReviewItem[]
+  meta: {
+    current_page: number
+    per_page: number
+    total: number
+    last_page: number
+    avg_rating: number
+    total_reviews: number
+  }
+}
+
+export interface WishlistItem {
+  id: number
+  user_id: number
+  product_id: number
+  product: Product
+  created_at: string
+  updated_at: string
 }
 
 export interface DashboardOverview {

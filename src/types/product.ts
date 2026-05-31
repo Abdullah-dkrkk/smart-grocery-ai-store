@@ -28,6 +28,7 @@ export interface Product {
   unit: string
   weight: string | null
   tags: string[]
+  nutrition_data: Record<string, unknown> | null
   vendor: VendorInfo | null
   created_at: string
 }

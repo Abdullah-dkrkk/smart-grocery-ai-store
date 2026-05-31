@@ -1,23 +1,16 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useState, useRef, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { DashboardContent } from "@/components/dashboard/dashboard-content"
 import { Button } from "@/components/ui/button"
-import { PanelLeftClose, PanelLeft, Bell, Search } from "lucide-react"
+import { PanelLeftClose, PanelLeft, Search, Bell, BellOff } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
 type Role = "user" | "vendor" | "nutritionist" | "super-admin"
 
 const validRoles: Role[] = ["user", "vendor", "nutritionist", "super-admin"]
-
-const roleInitials: Record<Role, string> = {
-  user: "U",
-  vendor: "V",
-  nutritionist: "N",
-  "super-admin": "SA",
-}
 
 export default function DashboardPage() {
   return (
@@ -34,6 +27,18 @@ function DashboardContentInner() {
 
   const [collapsed, setCollapsed] = useState(false)
   const [activeItem, setActiveItem] = useState("Overview")
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
@@ -61,16 +66,28 @@ function DashboardContentInner() {
             <Input placeholder="Search dashboard..." className="pl-9 h-9 text-sm" />
           </div>
 
-          <div className="flex items-center gap-3 ml-auto">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-green text-[9px] font-bold text-white">
-                3
-              </span>
-            </Button>
-
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-green/10 text-brand-green text-xs font-semibold">
-              {roleInitials[currentRole]}
+          <div className="flex items-center gap-1 ml-auto">
+            <div ref={notifRef} className="relative">
+              <button
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="relative p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer"
+              >
+                <Bell className="h-5 w-5" />
+              </button>
+              {notifOpen && (
+                <div className="absolute right-0 top-full mt-2 w-80 bg-card border rounded-xl shadow-xl z-50 overflow-hidden">
+                  <div className="p-4 border-b">
+                    <p className="text-sm font-semibold">Notifications</p>
+                  </div>
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
+                      <BellOff className="h-6 w-6 text-muted-foreground/40" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">No notifications</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">You&apos;re all caught up.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>

@@ -16,19 +16,19 @@ interface StatCardProps {
 export function StatCard({ icon: Icon, label, value, trend, positive, color }: StatCardProps) {
   return (
     <Card size="sm">
-      <CardContent className="flex items-start gap-4">
-        <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl", color)}>
-          <Icon className="h-6 w-6" />
+      <CardContent className="flex items-center gap-4">
+        <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/5", color)}>
+          <Icon className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+          <p className="text-xl font-bold tracking-tight">{value}</p>
           {trend && (
             <span className={cn(
-              "inline-flex items-center gap-0.5 text-sm font-medium",
-              positive ? "text-brand-green" : "text-destructive"
+              "inline-flex items-center gap-0.5 text-xs font-medium",
+              positive ? "text-emerald-600" : "text-red-600"
             )}>
-              {positive ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+              {positive ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
               {trend}
             </span>
           )}

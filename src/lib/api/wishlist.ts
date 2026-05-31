@@ -1,9 +1,9 @@
 import { get, post, del } from "./client"
-import type { Product } from "./types"
+import type { WishlistItem } from "./types"
 
 export const wishlistApi = {
   list() {
-    return get<Product[]>("/customer/wishlist")
+    return get<WishlistItem[]>("/customer/wishlist")
   },
 
   add(productId: number) {

@@ -77,7 +77,11 @@ export function FilterSidebar({
 
       <div>
         <h4 className="text-sm font-semibold mb-3">Categories</h4>
-        <div className="space-y-1 max-h-48 overflow-y-auto">
+        <div className="space-y-1 max-h-48 overflow-y-auto pr-2
+          [&::-webkit-scrollbar]:w-1.5
+          [&::-webkit-scrollbar-track]:bg-muted/30
+          [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20
+          [&::-webkit-scrollbar-thumb]:rounded-full">
           <button
             className={cn("w-full text-left px-3 py-1.5 text-sm rounded-md transition-colors", !selectedCategoryId && "bg-primary/10 text-primary font-medium")}
             onClick={() => onCategoryChange?.(undefined)}

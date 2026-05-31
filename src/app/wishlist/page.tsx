@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
@@ -15,8 +15,11 @@ import { Heart, ShoppingBag, Loader2, Eye, Check } from "lucide-react"
 import { useWishlist } from "@/lib/hooks/use-wishlist"
 import { useToast } from "@/components/ui/toast"
 import { useCartContext } from "@/lib/providers/cart-provider"
-import { useProducts } from "@/lib/hooks/use-products"
 import { useCategories } from "@/lib/hooks/use-categories"
+import { useProducts } from "@/lib/hooks/use-products"
+import { wishlistApi } from "@/lib/api/wishlist"
+import { getAuthToken } from "@/lib/api/config"
+import { adaptProducts } from "@/lib/adapters/product-adapter"
 import { MOCK_PRODUCTS } from "@/lib/mock/products"
 import { cn } from "@/lib/utils"
 import { handleImgError } from "@/lib/utils/placeholder"
@@ -29,25 +32,63 @@ const announcements = [
 ]
 
 export default function WishlistPage() {
-  const { wishlistIds, toggleWishlist, loadingId } = useWishlist()
   const { showToast } = useToast()
-  const { data: apiProducts = [], isLoading: productsLoading } = useProducts({ per_page: 100 })
+  const { wishlistIds, toggleWishlist, loadingId, isWishlisted } = useWishlist(showToast)
   const { data: categories = [] } = useCategories()
+  const { data: catalogProducts = [], isLoading: catalogLoading } = useProducts({ per_page: 100 })
 
-  const wishlistProducts = useMemo(() => {
-    const allProducts = [...apiProducts, ...MOCK_PRODUCTS]
-    const seen = new Set<number>()
-    const merged: Product[] = []
-    for (const p of allProducts) {
-      if (!seen.has(p.id)) {
-        seen.add(p.id)
-        merged.push(p)
+  const [apiProducts, setApiProducts] = useState<Product[]>([])
+  const [apiLoading, setApiLoading] = useState(true)
+
+  // Fetch wishlist products from API → get nested product data
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadWishlistProducts() {
+      setApiLoading(true)
+      const token = getAuthToken()
+
+      if (token && wishlistIds.length > 0) {
+        try {
+          const res = await wishlistApi.list()
+          if (!cancelled && res.data && res.data.length > 0) {
+            const products = res.data
+              .map((item) => item.product)
+              .filter(Boolean)
+            const adapted = adaptProducts(products)
+            setApiProducts(adapted)
+            setApiLoading(false)
+            return
+          }
+        } catch {
+          // API failed — fall through
+        }
+      }
+
+      if (!cancelled) {
+        setApiProducts([])
+        setApiLoading(false)
       }
     }
-    return merged.filter((p) => wishlistIds.includes(p.id))
-  }, [wishlistIds, apiProducts])
 
-  const isLoading = productsLoading
+    loadWishlistProducts()
+    return () => { cancelled = true }
+  }, [wishlistIds])
+
+  // Fallback: combine API products + catalog + mock, then filter by wishlistIds
+  const wishlistProducts = useMemo(() => {
+    if (apiProducts.length > 0) {
+      return apiProducts.filter((p) => wishlistIds.includes(p.id))
+    }
+
+    const map = new Map<number, Product>()
+    for (const p of catalogProducts) map.set(p.id, p)
+    for (const p of MOCK_PRODUCTS) if (!map.has(p.id)) map.set(p.id, p)
+
+    return wishlistIds.map((id) => map.get(id)).filter((p): p is Product => p !== undefined)
+  }, [apiProducts, wishlistIds, catalogProducts])
+
+  const isLoading = apiLoading || (catalogLoading && apiProducts.length === 0 && wishlistIds.length > 0)
   const isEmpty = !isLoading && wishlistProducts.length === 0
 
   return (
@@ -56,7 +97,7 @@ export default function WishlistPage() {
       <Header categories={categories} cartCount={3} />
 
       <main className="container mx-auto px-4 py-8">
-        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "My Wishlist" }]} className="mb-6" />
+        <Breadcrumbs items={[{ label: "My Wishlist" }]} className="mb-6" />
 
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -89,7 +130,13 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
             {wishlistProducts.map((product) => (
-              <WishlistCard key={product.id} product={product} />
+              <WishlistCard
+                key={product.id}
+                product={product}
+                toggleWishlist={toggleWishlist}
+                isWishlisted={isWishlisted}
+                loadingId={loadingId}
+              />
             ))}
           </div>
         )}
@@ -100,9 +147,17 @@ export default function WishlistPage() {
   )
 }
 
-function WishlistCard({ product }: { product: Product }) {
-  const { isWishlisted, toggleWishlist, loadingId } = useWishlist()
-  const { showToast } = useToast()
+function WishlistCard({
+  product,
+  toggleWishlist,
+  isWishlisted,
+  loadingId,
+}: {
+  product: Product
+  toggleWishlist: (product: Product) => void
+  isWishlisted: (productId: number) => boolean
+  loadingId: number | null
+}) {
   const { addItem } = useCartContext()
   const loading = loadingId === product.id
   const wishlisted = isWishlisted(product.id)
@@ -142,9 +197,8 @@ function WishlistCard({ product }: { product: Product }) {
         <button
           type="button"
           className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center outline-none focus:outline-none active:outline-none"
-          onClick={async () => {
-            await toggleWishlist(product)
-            showToast(!wishlisted ? "Added to Wishlist!" : "Removed from Wishlist")
+          onClick={() => {
+            toggleWishlist(product)
           }}
           disabled={loading}
         >

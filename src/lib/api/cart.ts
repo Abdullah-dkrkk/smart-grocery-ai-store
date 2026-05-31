@@ -6,7 +6,7 @@ export const cartApi = {
     return get<CartResponse>("/customer/cart")
   },
 
-  add(data: { product_id: number; quantity?: number }) {
+  add(data: { product_id: number; quantity?: number; mode?: "add" | "set" }) {
     return post<CartResponse>("/customer/cart/add", data)
   },
 

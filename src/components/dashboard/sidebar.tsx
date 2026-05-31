@@ -1,5 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -26,6 +30,9 @@ import {
   Shield,
   LogOut,
 } from "lucide-react"
+import { authApi } from "@/lib/api/auth"
+import { ordersApi } from "@/lib/api/orders"
+import { removeAuthToken, setAuthToken } from "@/lib/api/config"
 
 type Role = "user" | "vendor" | "nutritionist" | "super-admin"
 
@@ -157,8 +164,38 @@ interface SidebarProps {
 }
 
 export function Sidebar({ role, activeItem, onItemClick, collapsed, onToggle }: SidebarProps) {
+  const router = useRouter()
+  const { data: session } = useSession()
+  const [orderCount, setOrderCount] = useState<number | null>(null)
   const sections = roleNavItems[role]
   const roleInfo = roleLabels[role]
+  const userName = session?.user?.name || roleInfo.name
+  const userInitial = session?.user?.name
+    ? session.user.name.charAt(0).toUpperCase()
+    : role === "super-admin" ? "SA" : role === "nutritionist" ? "N" : role === "vendor" ? "V" : "U"
+
+  useEffect(() => {
+    if (!session?.user?.token) return
+    setAuthToken(session.user.token)
+    ordersApi.history(1, 1)
+      .then((res) => {
+        const total = (res as { meta?: { total?: number } }).meta?.total ?? res.data?.length ?? 0
+        setOrderCount(total)
+      })
+      .catch(() => {})
+  }, [session])
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout()
+    } catch {
+      // Proceed with local cleanup even if API call fails
+    }
+    removeAuthToken()
+    await signOut({ redirect: false })
+    router.push("/")
+    router.refresh()
+  }
 
   return (
     <aside
@@ -167,7 +204,7 @@ export function Sidebar({ role, activeItem, onItemClick, collapsed, onToggle }: 
         collapsed ? "w-[72px]" : "w-64"
       )}
     >
-      <div className="flex h-16 items-center gap-3 border-b px-4">
+      <Link href="/dashboard" className="flex h-16 items-center gap-3 border-b px-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-green text-white text-sm font-bold">
           SG
         </div>
@@ -177,15 +214,18 @@ export function Sidebar({ role, activeItem, onItemClick, collapsed, onToggle }: 
             <span className="text-[11px] text-muted-foreground">Dashboard</span>
           </div>
         )}
-      </div>
+      </Link>
 
       <div className={cn("border-b px-4 py-3", collapsed && "px-2")}>
         <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
           <div className={cn("flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold", roleInfo.color)}>
-            {role === "super-admin" ? "SA" : role === "nutritionist" ? "N" : role === "vendor" ? "V" : "U"}
+            {userInitial}
           </div>
           {!collapsed && (
-            <span className="text-xs font-medium">{roleInfo.name}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-medium truncate">{userName}</span>
+              <span className="text-[11px] text-muted-foreground truncate">{session?.user?.email || roleInfo.name}</span>
+            </div>
           )}
         </div>
       </div>
@@ -205,7 +245,13 @@ export function Sidebar({ role, activeItem, onItemClick, collapsed, onToggle }: 
                 return (
                   <button
                     key={item.label}
-                    onClick={() => onItemClick(item.label)}
+                    onClick={() => {
+                      if (item.label === "Wishlist") {
+                        router.push("/wishlist")
+                      } else {
+                        onItemClick(item.label)
+                      }
+                    }}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
                       collapsed && "justify-center px-0",
@@ -219,16 +265,36 @@ export function Sidebar({ role, activeItem, onItemClick, collapsed, onToggle }: 
                     {!collapsed && (
                       <span className="flex-1 text-left">{item.label}</span>
                     )}
-                    {!collapsed && item.badge && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-green/10 px-1.5 text-[11px] font-medium text-brand-green">
-                        {item.badge}
-                      </span>
-                    )}
-                    {collapsed && item.badge && (
-                      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-green text-[9px] font-bold text-white">
-                        {item.badge}
-                      </span>
-                    )}
+                    {!collapsed && (() => {
+                      let badgeContent: string | null = null
+                      if (item.label === "My Orders" && orderCount !== null) {
+                        if (orderCount === 0) badgeContent = null
+                        else if (orderCount >= 10) badgeContent = "9+"
+                        else badgeContent = String(orderCount)
+                      } else {
+                        badgeContent = item.badge || null
+                      }
+                      return badgeContent ? (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-green/10 px-1.5 text-[11px] font-medium text-brand-green">
+                          {badgeContent}
+                        </span>
+                      ) : null
+                    })()}
+                    {collapsed && (() => {
+                      let badgeContent: string | null = null
+                      if (item.label === "My Orders" && orderCount !== null) {
+                        if (orderCount === 0) badgeContent = null
+                        else if (orderCount >= 10) badgeContent = "9+"
+                        else badgeContent = String(orderCount)
+                      } else {
+                        badgeContent = item.badge || null
+                      }
+                      return badgeContent ? (
+                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-green text-[9px] font-bold text-white">
+                          {badgeContent}
+                        </span>
+                      ) : null
+                    })()}
                   </button>
                 )
               })}
@@ -239,6 +305,7 @@ export function Sidebar({ role, activeItem, onItemClick, collapsed, onToggle }: 
 
       <div className="border-t px-3 py-3">
         <button
+          onClick={handleLogout}
           className={cn(
             "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive",
             collapsed && "justify-center px-0"

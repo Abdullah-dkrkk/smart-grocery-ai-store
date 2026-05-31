@@ -118,7 +118,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const item = items.find((i) => i.id === itemId)
       if (!item) return
-      await cartApi.add({ product_id: item.product_id, quantity })
+      await cartApi.add({ product_id: item.product_id, quantity, mode: "set" })
       const apiItems = await fetchCartFromApi()
       setItems(apiItems)
     } catch {

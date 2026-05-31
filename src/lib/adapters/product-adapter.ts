@@ -55,29 +55,36 @@ export function getSvgForSlug(slug: string): string {
   return slugToSvgKey(slug)
 }
 
+function computeBadge(apiProduct: ApiProduct, price: number, comparePrice: number | null): string | null {
+  if (apiProduct.badge) return apiProduct.badge
+  if (comparePrice && comparePrice > price * 1.15) return "Sale"
+  if (apiProduct.is_featured) return "Hot"
+  return null
+}
+
 export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product | null {
   if (!apiProduct) return null
 
   try {
     const catName = apiProduct.category?.name ?? ""
-    const catSlug = categoryNameToSlug[catName] ?? apiProduct.category?.slug ?? ""
-
+    const catSlug = apiProduct.category?.slug ?? categoryNameToSlug[catName] ?? ""
     const price = Number(apiProduct.price) || 0
     const comparePrice = apiProduct.compare_at_price ? Number(apiProduct.compare_at_price) : null
-
-    const badge = comparePrice && comparePrice > price * 1.15 ? "Sale"
-      : apiProduct.is_featured ? "Hot"
-      : null
+    const badge = computeBadge(apiProduct, price, comparePrice)
 
     const mainImage = resolveImageUrl(apiProduct.image_url)
     const productImages = Array.isArray(apiProduct.images)
-      ? apiProduct.images.map((img) => resolveImageUrl(img.image_url))
+      ? apiProduct.images.map((img) => resolveImageUrl(img.image_url)).filter(Boolean)
       : mainImage
         ? [mainImage]
         : []
 
     const vendor: VendorInfo | null = apiProduct.vendor
-      ? { id: apiProduct.vendor.id, name: apiProduct.vendor.name }
+      ? {
+          id: apiProduct.vendor.id,
+          name: apiProduct.vendor.name,
+          slug: apiProduct.vendor.name?.toLowerCase().replace(/\s+/g, "-"),
+        }
       : null
 
     return {
@@ -85,25 +92,26 @@ export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product
       name: apiProduct.name ?? "",
       slug: apiProduct.slug ?? "",
       description: apiProduct.description ?? "",
-      short_description: "",
+      short_description: apiProduct.short_description ?? "",
       price,
       compare_price: comparePrice,
       cost_per_unit: null,
       image: mainImage || getPlaceholderImage(),
-      images: productImages,
+      images: productImages.length > 0 ? productImages : (mainImage ? [mainImage] : []),
       category_id: apiProduct.category_id ?? 0,
       category_name: catName,
       category_slug: catSlug,
-      rating: 4,
-      review_count: 0,
+      rating: apiProduct.avg_rating ?? 0,
+      review_count: apiProduct.reviews_count ?? 0,
       badge,
       badges: badge ? [badge] : [],
       is_featured: !!apiProduct.is_featured,
       is_on_sale: !!comparePrice,
       stock: apiProduct.stock_quantity ?? 0,
-      unit: "each",
+      unit: apiProduct.unit ?? "each",
       weight: apiProduct.weight_kg ?? null,
       tags: [],
+      nutrition_data: apiProduct.nutrition_data ?? null,
       vendor,
       created_at: apiProduct.created_at ?? "",
     }
@@ -130,7 +138,7 @@ export function adaptCategory(apiCategory: ApiCategory | null | undefined): Prod
       icon: getSvgForSlug(apiCategory.slug ?? ""),
       parent_id: apiCategory.parent_id ?? null,
       children: apiCategory.children?.map(adaptCategory).filter(Boolean) as ProductCategory[] | undefined,
-      product_count: apiCategory.product_count ?? 0,
+      product_count: apiCategory.product_count ?? apiCategory.products_count ?? 0,
     }
   } catch {
     return null

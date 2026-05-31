@@ -164,8 +164,8 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
             <div className="flex items-center gap-2 shrink-0 ml-auto">
               {status === "loading" ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-[76px] h-[36px] rounded-lg bg-muted animate-pulse" />
-                  <div className="w-[82px] h-[36px] rounded-lg bg-muted animate-pulse" />
+                  <div className="w-[76px] h-[36px] rounded-lg bg-muted border animate-pulse" />
+                  <div className="w-[82px] h-[36px] rounded-lg bg-muted border animate-pulse" />
                 </div>
               ) : session ? (
                 <Link
@@ -248,8 +248,8 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
             <div className={`items-center gap-1.5 ${isStuck ? "flex" : "hidden"}`}>
               {status === "loading" ? (
                 <>
-                  <div className="w-[52px] h-[28px] rounded-lg bg-muted animate-pulse" />
-                  <div className="w-[60px] h-[28px] rounded-lg bg-muted animate-pulse" />
+                  <div className="w-[52px] h-[28px] rounded-lg bg-muted border animate-pulse" />
+                  <div className="w-[60px] h-[28px] rounded-lg bg-muted border animate-pulse" />
                 </>
               ) : session ? (
                 <Link

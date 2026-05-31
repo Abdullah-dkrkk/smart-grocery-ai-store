@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import Link from "next/link"
 import { ChevronLeft, ChevronRight, Heart, Eye, Loader2, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -42,8 +42,8 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
     : null
   const [hovered, setHovered] = useState(false)
   const [cartState, setCartState] = useState<"idle" | "loading" | "added">("idle")
-  const { isWishlisted, toggleWishlist, loadingId } = useWishlist()
   const { showToast } = useToast()
+  const { isWishlisted, toggleWishlist, loadingId } = useWishlist(showToast)
   const { addItem } = useCartContext()
   const loading = loadingId === product.id
   const wishlisted = isWishlisted(product.id)
@@ -96,7 +96,6 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
               disabled={loading}
               onClick={async () => {
                 await toggleWishlist(product)
-                showToast(!wishlisted ? "Added to Wishlist!" : "Removed from Wishlist")
               }}
             >
               <Heart className={cn("h-4 w-4 transition-colors", wishlisted && "fill-brand-green text-brand-green")} />
@@ -143,11 +142,22 @@ export function ProductSlider({ title, description, products = [], tabs }: Produ
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
   const [scrollLeft, setScrollLeft] = useState(0)
+  const [canScroll, setCanScroll] = useState(false)
 
   const safeProducts = Array.isArray(products) ? products : []
   const filtered = activeTab === "all"
     ? safeProducts
     : safeProducts.filter((p) => p && p.category_slug === activeTab)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const check = () => setCanScroll(el.scrollWidth > el.clientWidth)
+    check()
+    const observer = new ResizeObserver(check)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [filtered.length, activeTab])
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return
@@ -191,14 +201,16 @@ export function ProductSlider({ title, description, products = [], tabs }: Produ
             <p className="text-[15px] text-muted-foreground mt-1">{description}</p>
           )}
         </div>
-        <div className="hidden sm:flex gap-2">
-          <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("left")}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("right")}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {canScroll && (
+          <div className="hidden sm:flex gap-2">
+            <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("left")}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button size="icon" className="h-9 w-9 rounded-full bg-brand-green hover:bg-brand-green/90 text-white" onClick={() => scroll("right")}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {tabs && tabs.length > 0 && (
