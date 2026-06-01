@@ -1,5 +1,5 @@
 import type { Product as ApiProduct, Category as ApiCategory } from "@/lib/api/types"
-import type { Product, ProductCategory, VendorInfo } from "@/types/product"
+import type { Product, ProductCategory, VendorInfo, VariationImage } from "@/types/product"
 import { getPlaceholderImage } from "@/lib/utils/placeholder"
 
 const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL
@@ -79,6 +79,16 @@ export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product
         ? [mainImage]
         : []
 
+    const variationImages: VariationImage[] = Array.isArray(apiProduct.images)
+      ? apiProduct.images
+          .map((img) => ({
+            url: resolveImageUrl(img.image_url),
+            variation_type: img.variation_type ?? null,
+            alt_text: img.alt_text ?? null,
+          }))
+          .filter((v) => !!v.url)
+      : []
+
     const vendor: VendorInfo | null = apiProduct.vendor
       ? {
           id: apiProduct.vendor.id,
@@ -98,6 +108,7 @@ export function adaptProduct(apiProduct: ApiProduct | null | undefined): Product
       cost_per_unit: null,
       image: mainImage || getPlaceholderImage(),
       images: productImages.length > 0 ? productImages : (mainImage ? [mainImage] : []),
+      variation_images: variationImages,
       category_id: apiProduct.category_id ?? 0,
       category_name: catName,
       category_slug: catSlug,

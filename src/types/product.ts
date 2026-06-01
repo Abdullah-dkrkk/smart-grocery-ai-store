@@ -4,6 +4,12 @@ export interface VendorInfo {
   slug?: string
 }
 
+export interface VariationImage {
+  url: string
+  variation_type: string | null
+  alt_text: string | null
+}
+
 export interface Product {
   id: number
   name: string
@@ -15,6 +21,7 @@ export interface Product {
   cost_per_unit: string | null
   image: string
   images: string[]
+  variation_images: VariationImage[]
   category_id: number
   category_name: string
   category_slug: string

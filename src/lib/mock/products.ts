@@ -2,7 +2,7 @@ import type { Product } from "@/types/product"
 
 const baseProduct = {
   description: "", short_description: "", cost_per_unit: null,
-  images: [], category_id: 1, is_featured: true, is_on_sale: true,
+  images: [], variation_images: [], category_id: 1, is_featured: true, is_on_sale: true,
   stock: 50, unit: "each" as const, weight: null, tags: [] as string[],
   nutrition_data: null,
   created_at: "2025-01-01", vendor: null,

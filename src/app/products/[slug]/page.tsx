@@ -57,13 +57,8 @@ function ProductDetailSkeleton() {
       <div className="container mx-auto px-4 py-8">
         <Skeleton className="h-5 w-64 mb-6" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          <div className="space-y-4">
-            <div className="bg-card border rounded-2xl overflow-hidden">
-              <div className="aspect-square">
-                <Skeleton className="w-full h-full rounded-none" />
-              </div>
-            </div>
-            <div className="flex gap-3">
+          <div className="flex gap-4">
+            <div className="flex flex-col shrink-0 gap-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="bg-card border rounded-xl overflow-hidden">
                   <div className="w-20 h-20">
@@ -71,6 +66,11 @@ function ProductDetailSkeleton() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="flex-1 bg-card border rounded-2xl overflow-hidden">
+              <div className="aspect-square">
+                <Skeleton className="w-full h-full rounded-none" />
+              </div>
             </div>
           </div>
           <div className="bg-card border rounded-xl p-6 space-y-6">
@@ -308,26 +308,30 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     style={{ transform: `translateY(-${thumbScrollIndex * thumbStep}px)` }}
                   >
                     {images.map((img, i) => (
-                      <button
+                      <div
                         key={i}
-                        onClick={() => {
-                          setSelectedImage(i)
-                          if (images.length <= visibleThumbs) return
-                          const isNearBottom = i >= thumbScrollIndex + visibleThumbs - 2
-                          const isNearTop = i <= thumbScrollIndex + 1
-                          if (isNearBottom && thumbScrollIndex < images.length - visibleThumbs) {
-                            setThumbScrollIndex((prev) => prev + 1)
-                          } else if (isNearTop && thumbScrollIndex > 0) {
-                            setThumbScrollIndex((prev) => prev - 1)
-                          }
+                        className="w-20 h-20 shrink-0 rounded-xl overflow-hidden"
+                        style={{
+                          border: selectedImage === i ? "2px solid #059669" : "2px solid transparent"
                         }}
-                        className={cn(
-                          "w-20 h-20 shrink-0 rounded-xl overflow-hidden border-2 transition-all cursor-pointer",
-                          selectedImage === i ? "border-brand-green ring-1 ring-brand-green/30" : "border-transparent hover:border-muted-foreground/30"
-                        )}
                       >
-                        <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                      </button>
+                        <button
+                          onClick={() => {
+                            setSelectedImage(i)
+                            if (images.length <= visibleThumbs) return
+                            const isNearBottom = i >= thumbScrollIndex + visibleThumbs - 2
+                            const isNearTop = i <= thumbScrollIndex + 1
+                            if (isNearBottom && thumbScrollIndex < images.length - visibleThumbs) {
+                              setThumbScrollIndex((prev) => prev + 1)
+                            } else if (isNearTop && thumbScrollIndex > 0) {
+                              setThumbScrollIndex((prev) => prev - 1)
+                            }
+                          }}
+                          className="w-full h-full cursor-pointer"
+                        >
+                          <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
