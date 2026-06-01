@@ -28,6 +28,7 @@ import {
   Settings,
   BarChart3,
   Shield,
+  Percent,
   LogOut,
 } from "lucide-react"
 import { authApi } from "@/lib/api/auth"
@@ -135,6 +136,7 @@ const roleNavItems: Record<Role, { section: string; items: NavItem[] }[]> = {
         { label: "Products", icon: Package },
         { label: "Orders", icon: ShoppingBag, badge: "45" },
         { label: "Payments", icon: DollarSign },
+        { label: "Discounts", icon: Percent },
       ],
     },
     {

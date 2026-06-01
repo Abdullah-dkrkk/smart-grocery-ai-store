@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
@@ -15,9 +15,11 @@ import { useCartContext } from "@/lib/providers/cart-provider"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { ordersApi } from "@/lib/api/orders"
 import { cartApi } from "@/lib/api/cart"
-import { Trash2, CreditCard, Check, AlertCircle, Landmark, ShoppingBag, ArrowLeft, Lock } from "lucide-react"
+import { useValidateDiscount } from "@/lib/hooks/use-discounts"
+import { Trash2, CreditCard, Check, AlertCircle, Landmark, ShoppingBag, ArrowLeft, Lock, Percent, X, Loader2, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/toast"
+import type { DiscountValidation } from "@/lib/api/types"
 
 const announcements = [
   { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
@@ -55,9 +57,43 @@ export default function CheckoutPage() {
   })
   const [paymentError, setPaymentError] = useState("")
 
+  const [promoCode, setPromoCode] = useState("")
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountValidation | null>(null)
+  const [promoError, setPromoError] = useState("")
+  const validateDiscount = useValidateDiscount()
+
   const shipping = subtotal >= 50 ? 0 : 9.99
   const tax = subtotal * 0.1
-  const total = subtotal + shipping + tax
+  const discount = appliedDiscount ? appliedDiscount.discount_amount : 0
+  const total = subtotal + shipping + tax - discount
+
+  useEffect(() => {
+    const savedCode = sessionStorage.getItem("checkout_discount_code")
+    if (savedCode && !cartLoading && subtotal > 0) {
+      sessionStorage.removeItem("checkout_discount_code")
+      setPromoCode(savedCode)
+      validateDiscount.mutate(
+        {
+          code: savedCode,
+          subtotal,
+          item_count: itemCount,
+          product_category_ids: itemCategoryIds,
+        },
+        {
+          onSuccess: (res) => {
+            setAppliedDiscount(res.data)
+          },
+          onError: () => {},
+        },
+      )
+    }
+  }, [cartLoading, subtotal, itemCount, itemCategoryIds])
+
+  const itemCategoryIds = useMemo(() => {
+    return items
+      .map((i) => (i.product as unknown as { category_id?: number }).category_id)
+      .filter((id): id is number => id != null)
+  }, [items])
 
   function updateField(field: keyof FormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -84,7 +120,68 @@ export default function CheckoutPage() {
       return
     }
     if (!validate()) return
+
+    if (promoCode.trim() && !appliedDiscount) {
+      validateDiscount.mutate(
+        {
+          code: promoCode.trim(),
+          subtotal,
+          item_count: itemCount,
+          product_category_ids: itemCategoryIds,
+        },
+        {
+          onSuccess: (res) => {
+            setAppliedDiscount(res.data)
+            setPromoError("")
+            setStep("confirm")
+          },
+          onError: (err: unknown) => {
+            const msg =
+              typeof err === "object" && err !== null && "message" in err
+                ? String((err as { message: string }).message)
+                : "Invalid promo code"
+            setPromoError(msg)
+          },
+        },
+      )
+      return
+    }
+
     setStep("confirm")
+  }
+
+  function handleApplyPromo() {
+    const code = promoCode.trim()
+    if (!code) return
+    setPromoError("")
+    setAppliedDiscount(null)
+
+    validateDiscount.mutate(
+      {
+        code,
+        subtotal,
+        item_count: itemCount,
+        product_category_ids: itemCategoryIds,
+      },
+      {
+        onSuccess: (res) => {
+          setAppliedDiscount(res.data)
+        },
+        onError: (err: unknown) => {
+          const msg =
+            typeof err === "object" && err !== null && "message" in err
+              ? String((err as { message: string }).message)
+              : "Invalid promo code"
+          setPromoError(msg)
+        },
+      },
+    )
+  }
+
+  function handleRemovePromo() {
+    setAppliedDiscount(null)
+    setPromoError("")
+    validateDiscount.reset()
   }
 
   async function syncCartToBackend() {
@@ -100,6 +197,23 @@ export default function CheckoutPage() {
     setPaymentError("")
     try {
       await syncCartToBackend()
+
+      const checkoutPayload: {
+        shipping_address: string
+        shipping_phone: string
+        payment_method: string
+        notes: string
+        discount_code?: string
+      } = {
+        shipping_address: `${form.firstName} ${form.lastName}, ${form.address}, ${form.city}, ${form.state} ${form.zip}`,
+        shipping_phone: form.phone,
+        payment_method: paymentMethod === "card" ? "credit_card" : paymentMethod === "cod" ? "cash_on_delivery" : "credit_card",
+        notes: "",
+      }
+
+      if (appliedDiscount) {
+        checkoutPayload.discount_code = appliedDiscount.discount_code
+      }
 
       if (paymentMethod === "authorize") {
         const cardReq = {
@@ -126,20 +240,14 @@ export default function CheckoutPage() {
           return
         }
         const notes = `Authorize.net Transaction: ${payData.transactionId} (Auth: ${payData.authCode})`
-        await ordersApi.checkout({
-          shipping_address: `${form.firstName} ${form.lastName}, ${form.address}, ${form.city}, ${form.state} ${form.zip}`,
-          shipping_phone: form.phone,
-          payment_method: "credit_card",
-          notes,
-        })
+        checkoutPayload.notes = notes
+        checkoutPayload.payment_method = "credit_card"
+
+        await ordersApi.checkout(checkoutPayload)
       } else {
-        await ordersApi.checkout({
-          shipping_address: `${form.firstName} ${form.lastName}, ${form.address}, ${form.city}, ${form.state} ${form.zip}`,
-          shipping_phone: form.phone,
-          payment_method: paymentMethod === "card" ? "credit_card" : "cash_on_delivery",
-          notes: "",
-        })
+        await ordersApi.checkout(checkoutPayload)
       }
+
       clearCart()
       setStep("success")
       showToast("Order placed successfully!")
@@ -151,6 +259,61 @@ export default function CheckoutPage() {
   }
 
   const isLoading = catLoading || cartLoading
+
+  const promoSection = (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Input
+          placeholder="Promo code"
+          value={promoCode}
+          onChange={(e) => { setPromoCode(e.target.value); setPromoError("") }}
+          onKeyDown={(e) => { if (e.key === "Enter") handleApplyPromo() }}
+          className="h-12 text-[14px]"
+          disabled={!!appliedDiscount}
+        />
+        {!appliedDiscount ? (
+          <Button
+            variant="outline"
+            className="h-12 min-w-[80px]"
+            onClick={handleApplyPromo}
+            disabled={validateDiscount.isPending || !promoCode.trim()}
+          >
+            {validateDiscount.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            className="h-12 w-[80px]"
+            onClick={handleRemovePromo}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      {validateDiscount.isPending && (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Loader2 className="h-3 w-3 animate-spin" /> Validating code...
+        </p>
+      )}
+      {promoError && (
+        <p className="text-xs text-destructive flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" /> {promoError}
+        </p>
+      )}
+      {appliedDiscount && (
+        <div className="flex items-center justify-between text-sm bg-brand-green/10 rounded-lg px-3 py-2">
+          <span className="flex items-center gap-2 text-brand-green font-medium">
+            <CheckCircle2 className="h-4 w-4" /> {appliedDiscount.discount_code}
+            <span className="text-xs text-muted-foreground font-normal">
+              ({appliedDiscount.discount.type === "percentage"
+                ? `${appliedDiscount.discount.value}%`
+                : `$${appliedDiscount.discount.value}`} off)
+            </span>
+          </span>
+        </div>
+      )}
+    </div>
+  )
 
   const shippingInfo = (
     <div className="bg-card border rounded-xl p-6">
@@ -318,10 +481,18 @@ export default function CheckoutPage() {
           paymentMethod === "authorize" ? `Authorize.net ••••${cardForm.cardNumber.replace(/\s/g, "").slice(-4)}` :
           paymentMethod === "card" ? "Credit/Debit Card" : "Cash on Delivery"
         }</p>
+        {appliedDiscount && (
+          <p>
+            <span className="font-medium text-foreground">Discount:</span>{" "}
+            <span className="text-brand-green">
+              {appliedDiscount.discount_code} (-${discount.toFixed(2)})
+            </span>
+          </p>
+        )}
       </div>
       <div className="flex gap-3">
         <Button onClick={handlePlaceOrder} disabled={submitting} className="bg-brand-green hover:bg-brand-green/90 text-white min-w-[160px]">
-          {submitting ? "Processing..." : "Place Order"}
+          {submitting ? "Processing..." : `Place Order — $${total.toFixed(2)}`}
         </Button>
         <Button variant="outline" onClick={() => setStep("form")}>Edit Details</Button>
       </div>
@@ -388,21 +559,33 @@ export default function CheckoutPage() {
             <span className="text-muted-foreground">Tax (10%)</span>
             <span className="font-medium">${tax.toFixed(2)}</span>
           </div>
+          {discount > 0 && appliedDiscount && (
+            <div className="flex justify-between text-brand-green">
+              <span className="flex items-center gap-1">
+                <Percent className="h-3.5 w-3.5" />
+                {appliedDiscount.discount_code}
+              </span>
+              <span className="font-medium">-${discount.toFixed(2)}</span>
+            </div>
+          )}
         </div>
 
         <Separator />
 
         <div className="flex justify-between text-base">
           <span className="font-semibold">Total</span>
-          <span className="font-bold text-lg">${total.toFixed(2)}</span>
+          <span className="font-bold text-lg">${Math.max(total, 0).toFixed(2)}</span>
         </div>
+
+        {step === "form" && promoSection}
 
         {step === "form" && (
           <Button
             onClick={handleReviewOrder}
+            disabled={validateDiscount.isPending}
             className="w-full bg-brand-green hover:bg-brand-green/90 text-white h-12 text-base"
           >
-            Review Order
+            {validateDiscount.isPending ? "Validating..." : "Review Order"}
           </Button>
         )}
       </div>
@@ -425,7 +608,12 @@ export default function CheckoutPage() {
             <p className="text-xs text-muted-foreground mb-8">
               Payment method: {paymentMethod === "authorize" ? "Authorize.net (Sandbox)" : paymentMethod === "card" ? "Credit/Debit Card" : "Cash on Delivery"}
             </p>
-        <div className="space-y-3">
+            {appliedDiscount && (
+              <p className="text-sm text-brand-green mb-4">
+                Discount applied: {appliedDiscount.discount_code} (-${discount.toFixed(2)})
+              </p>
+            )}
+            <div className="space-y-3">
               <Link href="/products" className="inline-flex items-center justify-center rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-10 px-6 text-sm font-medium transition-all">
                 Continue Shopping
               </Link>
@@ -579,8 +767,12 @@ export default function CheckoutPage() {
                   <Link href="/cart" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back to Cart
                   </Link>
-                  <Button onClick={handleReviewOrder} className="bg-brand-green hover:bg-brand-green/90 text-white h-12 text-base min-w-[200px]">
-                    Review Order
+                  <Button
+                    onClick={handleReviewOrder}
+                    disabled={validateDiscount.isPending}
+                    className="bg-brand-green hover:bg-brand-green/90 text-white h-12 text-base min-w-[200px]"
+                  >
+                    {validateDiscount.isPending ? "Validating..." : "Review Order"}
                   </Button>
                 </div>
               </>

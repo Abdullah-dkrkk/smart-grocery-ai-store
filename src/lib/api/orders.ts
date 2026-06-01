@@ -7,6 +7,7 @@ export interface CheckoutData {
   shipping_phone?: string
   payment_method?: string
   notes?: string
+  discount_code?: string
 }
 
 export const ordersApi = {

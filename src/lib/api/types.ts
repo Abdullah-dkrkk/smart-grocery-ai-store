@@ -84,6 +84,7 @@ export interface Order {
   tax_amount: string
   shipping_cost: string
   discount_amount: string
+  discount_id: number | null
   total_amount: string
   status: string
   payment_method: string | null
@@ -168,6 +169,35 @@ export interface WishlistItem {
   product: Product
   created_at: string
   updated_at: string
+}
+
+export interface Discount {
+  id: number
+  code: string
+  description: string | null
+  type: "percentage" | "fixed"
+  value: string
+  max_discount_amount: string | null
+  min_order_amount: string | null
+  max_uses: number | null
+  per_user_limit: number | null
+  used_count: number
+  applies_to: "all" | "category" | "product"
+  applicable_ids: number[] | null
+  minimum_items: number | null
+  starts_at: string | null
+  expires_at: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface DiscountValidation {
+  discount: Discount
+  discount_id: number
+  discount_code: string
+  discount_amount: number
+  new_subtotal: number
 }
 
 export interface DashboardOverview {

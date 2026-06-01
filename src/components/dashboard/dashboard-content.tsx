@@ -6,6 +6,7 @@ import { VendorOverview } from "@/components/dashboard/overviews/vendor-overview
 import { NutritionistOverview } from "@/components/dashboard/overviews/nutritionist-overview"
 import { SuperAdminOverview } from "@/components/dashboard/overviews/super-admin-overview"
 import { MyOrders } from "@/components/dashboard/pages/my-orders"
+import { Discounts } from "@/components/dashboard/pages/discounts"
 
 type Role = "user" | "vendor" | "nutritionist" | "super-admin"
 
@@ -23,6 +24,7 @@ const overviewComponents: Record<Role, React.ElementType> = {
 
 const pageComponents: Record<string, React.ElementType | null> = {
   "My Orders": MyOrders,
+  "Discounts": Discounts,
 }
 
 export function DashboardContent({ role, activeItem }: DashboardContentProps) {

@@ -11,9 +11,11 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Footer } from "@/components/store/footer"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Trash2, ShoppingBag, ArrowRight, Percent, X } from "lucide-react"
+import { Trash2, ShoppingBag, ArrowRight, Percent, X, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { useCartContext } from "@/lib/providers/cart-provider"
 import { useCategories } from "@/lib/hooks/use-categories"
+import { useValidateDiscount } from "@/lib/hooks/use-discounts"
+import type { DiscountValidation } from "@/lib/api/types"
 
 const announcements = [
   { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
@@ -25,11 +27,48 @@ export default function CartPage() {
   const { items, itemCount, subtotal, updateQuantity, removeItem, loading } = useCartContext()
   const { data: categories = [], isLoading: catLoading } = useCategories()
   const [promoCode, setPromoCode] = useState("")
-  const [promoApplied, setPromoApplied] = useState(false)
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountValidation | null>(null)
+  const [promoError, setPromoError] = useState("")
+  const validateDiscount = useValidateDiscount()
 
   const shipping = subtotal >= 50 ? 0 : 9.99
-  const discount = promoApplied ? subtotal * 0.1 : 0
+  const discount = appliedDiscount ? appliedDiscount.discount_amount : 0
   const total = subtotal + shipping - discount
+
+  function handleApplyPromo() {
+    const code = promoCode.trim()
+    if (!code) return
+
+    setPromoError("")
+    setAppliedDiscount(null)
+
+    validateDiscount.mutate(
+      {
+        code,
+        subtotal,
+        item_count: itemCount,
+      },
+      {
+        onSuccess: (res) => {
+          setAppliedDiscount(res.data)
+          setPromoCode("")
+        },
+        onError: (err: unknown) => {
+          const msg =
+            typeof err === "object" && err !== null && "message" in err
+              ? String((err as { message: string }).message)
+              : "Invalid promo code"
+          setPromoError(msg)
+        },
+      },
+    )
+  }
+
+  function handleRemovePromo() {
+    setAppliedDiscount(null)
+    setPromoError("")
+    validateDiscount.reset()
+  }
 
   if (catLoading || loading) {
     return (
@@ -151,36 +190,51 @@ export default function CartPage() {
                   <span className="text-muted-foreground">Shipping</span>
                   <span className="font-medium">{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
                 </div>
-                {discount > 0 && (
+                {discount > 0 && appliedDiscount && (
                   <div className="flex justify-between text-brand-green">
-                    <span>Promo (10%)</span>
+                    <span className="flex items-center gap-1">
+                      <Percent className="h-3.5 w-3.5" />
+                      {appliedDiscount.discount.type === "percentage"
+                        ? `${appliedDiscount.discount.value}% off`
+                        : `$${appliedDiscount.discount.value} off`}
+                      <span className="text-xs text-muted-foreground ml-1">({appliedDiscount.discount_code})</span>
+                    </span>
                     <span className="font-medium">-${discount.toFixed(2)}</span>
                   </div>
                 )}
               </div>
 
-              {!promoApplied ? (
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Promo code"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    className="h-12 text-[14px]"
-                  />
-                  <Button
-                    variant="outline"
-                    className="h-12"
-                    onClick={() => { if (promoCode.trim()) setPromoApplied(true) }}
-                  >
-                    Apply
-                  </Button>
+              {!appliedDiscount ? (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Promo code"
+                      value={promoCode}
+                      onChange={(e) => { setPromoCode(e.target.value); setPromoError("") }}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleApplyPromo() }}
+                      className="h-12 text-[14px]"
+                    />
+                    <Button
+                      variant="outline"
+                      className="h-12 min-w-[80px]"
+                      onClick={handleApplyPromo}
+                      disabled={validateDiscount.isPending || !promoCode.trim()}
+                    >
+                      {validateDiscount.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                  {promoError && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {promoError}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-between text-sm bg-brand-green/10 rounded-lg px-3 py-2">
                   <span className="flex items-center gap-2 text-brand-green font-medium">
-                    <Percent className="h-4 w-4" /> Code applied
+                    <CheckCircle2 className="h-4 w-4" /> {appliedDiscount.discount_code}
                   </span>
-                  <button onClick={() => { setPromoApplied(false); setPromoCode("") }}>
+                  <button onClick={handleRemovePromo}>
                     <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                   </button>
                 </div>
@@ -190,12 +244,22 @@ export default function CartPage() {
 
               <div className="flex justify-between text-base">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-lg">${total.toFixed(2)}</span>
+                <span className="font-bold text-lg">${Math.max(total, 0).toFixed(2)}</span>
               </div>
 
-              <Link href="/checkout" className="inline-flex items-center justify-center w-full rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-10 text-[14px] font-medium transition-all">
+              <button
+                onClick={() => {
+                  if (appliedDiscount) {
+                    sessionStorage.setItem("checkout_discount_code", appliedDiscount.discount_code)
+                  } else {
+                    sessionStorage.removeItem("checkout_discount_code")
+                  }
+                  window.location.href = "/checkout"
+                }}
+                className="inline-flex items-center justify-center w-full rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-10 text-[14px] font-medium transition-all"
+              >
                 Proceed to Checkout <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
+              </button>
 
               <Link href="/products" className="inline-flex items-center justify-center w-full gap-1.5 rounded-lg border border-brand-green/30 bg-brand-green-light dark:bg-brand-green/10 px-4 py-2 text-[14px] font-medium text-brand-green transition-all hover:bg-brand-green/15 dark:hover:bg-brand-green/20 hover:border-brand-green/50 active:translate-y-px">
                 Continue Shopping
