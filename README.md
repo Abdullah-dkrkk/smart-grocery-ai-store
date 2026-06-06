@@ -1,7 +1,5 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Smart Grocery AI Store — Intelligent grocery shopping platform powered by AI.
-
 ## Getting Started
 
 First, run the development server:
