@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, Truck, Tag, Package, RotateCcw } from "lucide-react"
+import { ShoppingBag, Truck, Tag, Package, RotateCcw, Sparkles } from "lucide-react"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
 import { CategoryShowcase } from "@/components/store/category-showcase"
@@ -348,6 +349,30 @@ export default function HomePage() {
             description="Start Your Daily Shopping with Nest Mart"
           />
         </section>
+
+        {/* AI Assistant CTA */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-green/20 via-emerald-50/30 to-brand-orange/10 dark:from-brand-green/10 dark:via-emerald-950/20 dark:to-brand-orange/5 p-8 md:p-12">
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="max-w-lg">
+              <Badge className="bg-brand-orange text-white mb-4 text-xs px-3 py-1">New</Badge>
+              <h2 className="text-2xl md:text-3xl font-heading font-semibold tracking-tight mb-2">
+                Get Your Personalized Diet Plan
+              </h2>
+              <p className="text-muted-foreground text-sm md:text-base">
+                Let our AI create a custom meal plan tailored to your health goals, preferences, and dietary needs. Start your journey to better eating today.
+              </p>
+            </div>
+            <Link
+              href="/dashboard?role=user&tab=AI+Assistant"
+              className="inline-flex items-center justify-center rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-12 px-8 text-base font-semibold gap-2 shrink-0 transition-all"
+            >
+              <Sparkles className="h-5 w-5" />
+              Try AI Assistant
+            </Link>
+          </div>
+        </section>
+
+        <Separator />
 
         {/* Features */}
         <section className="-mt-11">

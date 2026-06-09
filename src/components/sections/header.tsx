@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Search, ShoppingCart, Heart, ChevronDown, Menu, X, Phone, Bell, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,8 @@ interface HeaderProps {
 
 export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderProps) {
   const { data: session, status } = useSession()
+  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState("")
   const { wishlistIds } = useWishlist()
   const { openDrawer, itemCount } = useCartContext()
   const wishlistCount = wishlistIds.length
@@ -149,16 +152,26 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
             </div>
 
             {/* Search bar */}
-            <div className="flex-1 relative">
+            <form
+              className="flex-1 relative"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (searchQuery.trim()) {
+                  router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                }
+              }}
+            >
               <Input
                 type="search"
                 placeholder="Search for products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-10 pr-10 border-brand-green/20 focus-visible:border-brand-green text-[15px] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden [&::-ms-clear]:hidden"
               />
-              <Button size="icon" className="absolute right-0 top-0 h-10 w-10 bg-brand-green hover:bg-brand-green/90 text-white rounded-l-none">
+              <Button type="submit" size="icon" className="absolute right-0 top-0 h-10 w-10 bg-brand-green hover:bg-brand-green/90 text-white rounded-l-none">
                 <Search className="h-4 w-4" />
               </Button>
-            </div>
+            </form>
 
             {/* Auth buttons */}
             <div className="flex items-center gap-2 shrink-0 ml-auto">
@@ -359,9 +372,9 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
                 {link.label}
               </a>
             ))}
-            <div className="border-t pt-3 mt-3">
-              <Input type="search" placeholder="Search for products..." className="h-11" />
-            </div>
+            <form className="border-t pt-3 mt-3" onSubmit={(e) => { e.preventDefault(); const v = new FormData(e.currentTarget).get("q") as string; if (v?.trim()) { router.push(`/search?q=${encodeURIComponent(v.trim())}`); setMobileMenuOpen(false) } }}>
+              <Input name="q" type="search" placeholder="Search for products..." className="h-11" />
+            </form>
             {displayCategories.map((cat) => (
               <a key={cat.id} href={`/category/${cat.slug}`}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm hover:bg-muted transition-colors"

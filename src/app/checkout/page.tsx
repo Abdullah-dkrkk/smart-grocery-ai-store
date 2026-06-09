@@ -67,6 +67,12 @@ export default function CheckoutPage() {
   const discount = appliedDiscount ? appliedDiscount.discount_amount : 0
   const total = subtotal + shipping + tax - discount
 
+  const itemCategoryIds = useMemo(() => {
+    return items
+      .map((i) => (i.product as unknown as { category_id?: number }).category_id)
+      .filter((id): id is number => id != null)
+  }, [items])
+
   useEffect(() => {
     const savedCode = sessionStorage.getItem("checkout_discount_code")
     if (savedCode && !cartLoading && subtotal > 0) {
@@ -88,12 +94,6 @@ export default function CheckoutPage() {
       )
     }
   }, [cartLoading, subtotal, itemCount, itemCategoryIds])
-
-  const itemCategoryIds = useMemo(() => {
-    return items
-      .map((i) => (i.product as unknown as { category_id?: number }).category_id)
-      .filter((id): id is number => id != null)
-  }, [items])
 
   function updateField(field: keyof FormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))

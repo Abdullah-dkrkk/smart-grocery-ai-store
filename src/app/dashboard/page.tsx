@@ -24,9 +24,10 @@ function DashboardContentInner() {
   const searchParams = useSearchParams()
   const roleParam = searchParams.get("role") as Role | null
   const currentRole: Role = roleParam && validRoles.includes(roleParam) ? roleParam : "user"
+  const tabParam = searchParams.get("tab")
 
   const [collapsed, setCollapsed] = useState(false)
-  const [activeItem, setActiveItem] = useState("Overview")
+  const [activeItem, setActiveItem] = useState(tabParam || "Overview")
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
 

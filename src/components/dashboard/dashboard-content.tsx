@@ -1,5 +1,7 @@
 "use client"
 
+import { HealthProfile } from "@/components/dashboard/pages/health-profile"
+import { AiAssistant } from "@/components/dashboard/pages/ai-assistant"
 import { ShoppingBag } from "lucide-react"
 import { UserOverview } from "@/components/dashboard/overviews/user-overview"
 import { VendorOverview } from "@/components/dashboard/overviews/vendor-overview"
@@ -7,6 +9,34 @@ import { NutritionistOverview } from "@/components/dashboard/overviews/nutrition
 import { SuperAdminOverview } from "@/components/dashboard/overviews/super-admin-overview"
 import { MyOrders } from "@/components/dashboard/pages/my-orders"
 import { Discounts } from "@/components/dashboard/pages/discounts"
+import { MyProfile } from "@/components/dashboard/pages/my-profile"
+import { Addresses } from "@/components/dashboard/pages/addresses"
+import { PaymentMethods } from "@/components/dashboard/pages/payment-methods"
+import { Reviews } from "@/components/dashboard/pages/reviews"
+import { NutritionPlans } from "@/components/dashboard/pages/nutrition-plans"
+import { VendorProducts } from "@/components/dashboard/pages/vendor-products"
+import { VendorAddProduct } from "@/components/dashboard/pages/vendor-add-product"
+import { OrdersReceived } from "@/components/dashboard/pages/orders-received"
+import { Inventory } from "@/components/dashboard/pages/inventory"
+import { Earnings } from "@/components/dashboard/pages/earnings"
+import { StoreSettings } from "@/components/dashboard/pages/store-settings"
+import { VendorReviews } from "@/components/dashboard/pages/vendor-reviews"
+import { MyClients } from "@/components/dashboard/pages/my-clients"
+import { DietCharts } from "@/components/dashboard/pages/diet-charts"
+import { Consultations } from "@/components/dashboard/pages/consultations"
+import { Appointments } from "@/components/dashboard/pages/appointments"
+import { Articles } from "@/components/dashboard/pages/articles"
+import { NutritionistProfile } from "@/components/dashboard/pages/nutritionist-profile"
+import { MealPlans } from "@/components/dashboard/pages/meal-plans"
+import { AdminUsers } from "@/components/dashboard/pages/admin-users"
+import { AdminVendors } from "@/components/dashboard/pages/admin-vendors"
+import { AdminNutritionists } from "@/components/dashboard/pages/admin-nutritionists"
+import { AdminProducts } from "@/components/dashboard/pages/admin-products"
+import { AdminOrders } from "@/components/dashboard/pages/admin-orders"
+import { AdminPayments } from "@/components/dashboard/pages/admin-payments"
+import { Analytics } from "@/components/dashboard/pages/analytics"
+import { AdminSettings } from "@/components/dashboard/pages/admin-settings"
+import { AuditLog } from "@/components/dashboard/pages/audit-log"
 
 type Role = "user" | "vendor" | "nutritionist" | "super-admin"
 
@@ -25,6 +55,36 @@ const overviewComponents: Record<Role, React.ElementType> = {
 const pageComponents: Record<string, React.ElementType | null> = {
   "My Orders": MyOrders,
   "Discounts": Discounts,
+  "My Profile": MyProfile,
+  "Addresses": Addresses,
+  "Payment Methods": PaymentMethods,
+  "Reviews": Reviews,
+  "Nutrition Plans": NutritionPlans,
+  "AI Assistant": AiAssistant,
+  "Health Profile": HealthProfile,
+  "My Products": VendorProducts,
+  "Add Product": VendorAddProduct,
+  "Orders Received": OrdersReceived,
+  "Inventory": Inventory,
+  "Earnings": Earnings,
+  "Store Settings": StoreSettings,
+  "Product Reviews": VendorReviews,
+  "My Clients": MyClients,
+  "Meal Plans": MealPlans,
+  "Diet Charts": DietCharts,
+  "Consultations": Consultations,
+  "Appointments": Appointments,
+  "Articles": Articles,
+  "Profile": NutritionistProfile,
+  "Users": AdminUsers,
+  "Vendors": AdminVendors,
+  "Nutritionists": AdminNutritionists,
+  "Products": AdminProducts,
+  "Orders": AdminOrders,
+  "Payments": AdminPayments,
+  "Analytics": Analytics,
+  "Settings": AdminSettings,
+  "Audit Log": AuditLog,
 }
 
 export function DashboardContent({ role, activeItem }: DashboardContentProps) {

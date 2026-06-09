@@ -14,6 +14,8 @@ import {
   MapPin,
   CreditCard,
   Apple,
+  Bot,
+  Activity,
   Package,
   PlusCircle,
   Truck,
@@ -67,6 +69,8 @@ const roleNavItems: Record<Role, { section: string; items: NavItem[] }[]> = {
       section: "Nutrition",
       items: [
         { label: "Nutrition Plans", icon: Apple },
+        { label: "AI Assistant", icon: Bot },
+        { label: "Health Profile", icon: Activity },
       ],
     },
   ],
@@ -91,7 +95,7 @@ const roleNavItems: Record<Role, { section: string; items: NavItem[] }[]> = {
     {
       section: "Feedback",
       items: [
-        { label: "Reviews", icon: Star },
+        { label: "Product Reviews", icon: Star },
       ],
     },
   ],
