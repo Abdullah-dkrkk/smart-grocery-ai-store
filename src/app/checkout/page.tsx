@@ -2,10 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react"
 import Link from "next/link"
-import { AnnouncementBar } from "@/components/sections/announcement-bar"
+import { AnnouncementBarWrapper } from "@/components/sections/announcement-bar-wrapper"
 import { Header } from "@/components/sections/header"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
-import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { QuantitySelector } from "@/components/common/quantity-selector"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -604,7 +603,7 @@ export default function CheckoutPage() {
   if (step === "success") {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <AnnouncementBarWrapper />
         <Header categories={categories} />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Checkout" }]} className="mb-8" />
@@ -640,7 +639,7 @@ export default function CheckoutPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <AnnouncementBarWrapper />
         <Header categories={categories} />
         <main className="container mx-auto px-4 py-8">
           <Breadcrumbs items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} className="mb-6" />
@@ -739,7 +738,7 @@ export default function CheckoutPage() {
   if (items.length === 0 && !isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <AnnouncementBarWrapper />
         <Header categories={categories} />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Checkout" }]} className="mb-8" />
@@ -759,7 +758,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <AnnouncementBarWrapper />
       <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">

@@ -1,4 +1,10 @@
-import { API_CONFIG, getAuthToken } from "./config"
+import { API_CONFIG, getAuthToken, removeAuthToken } from "./config"
+
+let onUnauthorized: (() => void) | null = null
+
+export function setOnUnauthorized(callback: () => void) {
+  onUnauthorized = callback
+}
 
 export interface ApiResponse<T = unknown> {
   success: boolean
@@ -67,6 +73,10 @@ async function request<T>(
   }
 
   if (!response.ok || !data.success) {
+    if (response.status === 401) {
+      removeAuthToken()
+      onUnauthorized?.()
+    }
     throw new ApiError(response.status, data)
   }
 

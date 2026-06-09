@@ -3,9 +3,8 @@
 import { useState, useCallback, useMemo } from "react"
 import { useParams, useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { AnnouncementBar } from "@/components/sections/announcement-bar"
+import { AnnouncementBarWrapper } from "@/components/sections/announcement-bar-wrapper"
 import { Header } from "@/components/sections/header"
-import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { Footer } from "@/components/store/footer"
 import { FilterSidebar } from "@/components/store/filter-sidebar"
 import { ProductGrid } from "@/components/store/product-grid"
@@ -132,7 +131,7 @@ export default function CategorySlugPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <AnnouncementBarWrapper />
       <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">

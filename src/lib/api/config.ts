@@ -7,6 +7,7 @@ export const API_CONFIG = {
 }
 
 let memoryToken: string | null = null
+let initPromise: Promise<void> | null = null
 
 export function getAuthToken(): string | null {
   return memoryToken
@@ -20,6 +21,24 @@ export function setAuthToken(token: string): void {
 export function removeAuthToken(): void {
   memoryToken = null
   syncClearCookie()
+}
+
+export async function initAuthToken(): Promise<void> {
+  if (memoryToken) return
+  try {
+    const res = await fetch("/api/auth/token")
+    const data = await res.json()
+    if (data?.data) {
+      memoryToken = data.data
+    }
+  } catch {}
+}
+
+export function ensureAuthTokenInitialized(): Promise<void> {
+  if (!initPromise) {
+    initPromise = initAuthToken()
+  }
+  return initPromise
 }
 
 async function syncTokenToCookie(token: string) {

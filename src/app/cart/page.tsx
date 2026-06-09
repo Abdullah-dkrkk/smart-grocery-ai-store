@@ -2,10 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { AnnouncementBar } from "@/components/sections/announcement-bar"
+import { AnnouncementBarWrapper } from "@/components/sections/announcement-bar-wrapper"
 import { Header } from "@/components/sections/header"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
-import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { QuantitySelector } from "@/components/common/quantity-selector"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,7 +67,7 @@ export default function CartPage() {
   if (catLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <AnnouncementBarWrapper />
         <Header categories={categories} />
         <main className="container mx-auto px-4 py-8">
           <Breadcrumbs items={[{ label: "Cart" }]} className="mb-6" />
@@ -113,7 +112,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <AnnouncementBarWrapper />
         <Header categories={categories} />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Cart" }]} className="mb-8" />
@@ -133,7 +132,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <AnnouncementBarWrapper />
       <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">

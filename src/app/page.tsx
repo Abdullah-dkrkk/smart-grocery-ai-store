@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ShoppingBag, Truck, Tag, Package, RotateCcw, Sparkles } from "lucide-react"
-import { AnnouncementBar } from "@/components/sections/announcement-bar"
+import { AnnouncementBarWrapper } from "@/components/sections/announcement-bar-wrapper"
 import { Header } from "@/components/sections/header"
-import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { CategoryShowcase } from "@/components/store/category-showcase"
 import { BannerRow } from "@/components/sections/banner-row"
 import { ProductSlider } from "@/components/store/product-slider"
@@ -173,7 +172,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <AnnouncementBarWrapper />
       <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8 space-y-16">

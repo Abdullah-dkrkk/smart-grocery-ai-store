@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { AnnouncementBar } from "@/components/sections/announcement-bar"
+import { AnnouncementBarWrapper } from "@/components/sections/announcement-bar-wrapper"
 import { Header } from "@/components/sections/header"
 import { Footer } from "@/components/store/footer"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { handleImgError } from "@/lib/utils/placeholder"
-import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { AlertCircle, RefreshCw, Package, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ProductCategory } from "@/types/product"
@@ -20,7 +19,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <AnnouncementBarWrapper />
       <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">

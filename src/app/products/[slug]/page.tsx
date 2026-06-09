@@ -3,9 +3,8 @@
 import { useState, use, useRef, useCallback } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { AnnouncementBar } from "@/components/sections/announcement-bar"
+import { AnnouncementBarWrapper } from "@/components/sections/announcement-bar-wrapper"
 import { Header } from "@/components/sections/header"
-import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
 import { PriceDisplay } from "@/components/common/price-display"
 import { StarRating } from "@/components/common/star-rating"
@@ -276,7 +275,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <AnnouncementBarWrapper />
       <Header categories={allCategories} />
 
       <main className="container mx-auto px-4 py-8">

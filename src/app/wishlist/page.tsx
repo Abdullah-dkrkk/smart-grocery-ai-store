@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { AnnouncementBar } from "@/components/sections/announcement-bar"
+import { AnnouncementBarWrapper } from "@/components/sections/announcement-bar-wrapper"
 import { Header } from "@/components/sections/header"
-import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { Footer } from "@/components/store/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -88,7 +87,7 @@ export default function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <AnnouncementBarWrapper />
       <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">
