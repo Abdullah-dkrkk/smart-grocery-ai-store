@@ -9,18 +9,7 @@ export default function NotFound() {
           <div className="text-[12rem] font-heading font-bold leading-none tracking-tighter text-[#059669]/10 select-none">
             404
           </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-1">
-              <svg width="80" height="80" viewBox="0 0 80 80" fill="none" className="text-brand-green">
-                <circle cx="40" cy="40" r="38" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" opacity="0.3" />
-                <circle cx="40" cy="40" r="28" stroke="currentColor" strokeWidth="1.5" opacity="0.15" />
-                <path d="M32 36C32 33.8 33.8 32 36 32H44C46.2 32 48 33.8 48 36V44C48 46.2 46.2 48 44 48H36C33.8 48 32 46.2 32 44V36Z" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M38 38L42 42M42 38L38 42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M28 28L34 34M52 52L46 46" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-                <path d="M52 28L46 34M28 52L34 46" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-              </svg>
-            </div>
-          </div>
+
         </div>
 
         <h1 className="text-3xl md:text-4xl font-heading font-semibold text-foreground mb-3">
@@ -48,7 +37,7 @@ export default function NotFound() {
           </Link>
         </div>
 
-        <div className="mt-12 flex items-center gap-6 text-xs text-muted-foreground/60">
+        <div className="mt-12 flex items-center gap-6 text-sm text-muted-foreground/80">
           <Link href="/" className="hover:text-brand-green transition-colors">Home</Link>
           <Link href="/categories" className="hover:text-brand-green transition-colors">Categories</Link>
           <Link href="/cart" className="hover:text-brand-green transition-colors">Cart</Link>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useMemo } from "react"
 import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +49,41 @@ export default function HomePage() {
   const { data: categories = [], isLoading: catLoading } = useCategories()
   const { data: products = [], isLoading: prodLoading } = useProducts()
   const { data: featuredProducts = [], isLoading: featLoading } = useFeaturedProducts()
+
+  const bestSellerTabs = useMemo(() => {
+    const prods = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8)
+    const counts: Record<string, { name: string; count: number }> = {}
+    for (const p of prods) {
+      if (p.category_slug) {
+        const cat = p.category_slug
+        if (!counts[cat]) counts[cat] = { name: p.category_name || cat, count: 0 }
+        counts[cat].count++
+      }
+    }
+    return [
+      { slug: "all", name: "All" },
+      ...Object.entries(counts)
+        .filter(([_, d]) => d.count >= 2)
+        .map(([slug, d]) => ({ slug, name: d.name })),
+    ]
+  }, [featuredProducts, products])
+
+  const popularTabs = useMemo(() => {
+    const counts: Record<string, { name: string; count: number }> = {}
+    for (const p of products) {
+      if (p.category_slug) {
+        const cat = p.category_slug
+        if (!counts[cat]) counts[cat] = { name: p.category_name || cat, count: 0 }
+        counts[cat].count++
+      }
+    }
+    return [
+      { slug: "all", name: "All" },
+      ...Object.entries(counts)
+        .filter(([_, d]) => d.count >= 2)
+        .map(([slug, d]) => ({ slug, name: d.name })),
+    ]
+  }, [products])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -236,13 +271,7 @@ export default function HomePage() {
               title="Best Sellers"
               description="Top rated products you cannot miss"
               products={featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8)}
-              tabs={[
-                { slug: "all", name: "All" },
-                { slug: "fruits", name: "Fruits" },
-                { slug: "vegetables", name: "Vegetables" },
-                { slug: "meat", name: "Meat" },
-                { slug: "pet-foods", name: "Pet Foods" },
-              ]}
+              tabs={bestSellerTabs}
             />
           )}
         </section>
@@ -258,15 +287,7 @@ export default function HomePage() {
               title="Popular Products"
               description="Most loved items by our customers"
               products={products}
-              tabs={[
-                { slug: "all", name: "All" },
-                { slug: "milk-diaries", name: "Milk" },
-                { slug: "cookies-teas", name: "Coffee & Teas" },
-                { slug: "pet-foods", name: "Pet Foods" },
-                { slug: "meat", name: "Meat" },
-                { slug: "vegetables", name: "Vegetables" },
-                { slug: "fruits", name: "Fruits" },
-              ]}
+              tabs={popularTabs}
             />
           )}
         </section>

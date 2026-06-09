@@ -261,3 +261,9 @@ body {
     letter-spacing: -0.02em;
   }
 }
+
+/* Product descriptions and body text consistency */
+.prose {
+  font-size: 1rem;
+  line-height: 1.75;
+}

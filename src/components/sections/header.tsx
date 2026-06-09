@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
@@ -12,6 +12,7 @@ import { getCategorySvg } from "@/components/sections/category-icons"
 import { handleImgError } from "@/lib/utils/placeholder"
 import { useWishlist } from "@/lib/hooks/use-wishlist"
 import { useCartContext } from "@/lib/providers/cart-provider"
+import { siteSettingsApi } from "@/lib/api/site-settings"
 import type { ProductCategory } from "@/types/product"
 
 interface HeaderProps {
@@ -22,6 +23,9 @@ export function Header({ categories = [] }: HeaderProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
+  const [supportPhone, setSupportPhone] = useState("1900 - 888")
+  const [supportText, setSupportText] = useState("Need help? Call Us:")
+  const [megaMenuBannerEnabled, setMegaMenuBannerEnabled] = useState(true)
   const { wishlistIds } = useWishlist()
   const { openDrawer, itemCount } = useCartContext()
   const wishlistCount = wishlistIds.length
@@ -66,20 +70,18 @@ export function Header({ categories = [] }: HeaderProps) {
 
   const displayCategories = categories.slice(0, 10)
 
-  const megaMenuLinks = [
-    {
-      title: "Fruits & Vegetables",
-      links: ["Meat & Poultry", "Fresh Vegetables", "Herbs & Seasoning", "Cuts & Sprouts", "Exotic Fruits & Veggies", "Package Produce"],
-    },
-    {
-      title: "Breakfast & Dairy",
-      links: ["Milk & Flavoured Milk", "Butter & Margarine", "Eggs Substitutes", "Marmalades", "Sour Cream", "Cheese"],
-    },
-    {
-      title: "Meat & Seafood",
-      links: ["Breakfast Sausage", "Dinner Sausage", "Chicken", "Sliced Daily Meat", "Wild Caught Fillets", "Crab & Shellfish"],
-    },
-  ]
+  const groupedCategories = useMemo(() => {
+    const chunks: { title: string; links: { name: string; slug: string }[] }[] = []
+    const valid = categories.filter(c => c.name)
+    for (let i = 0; i < valid.length; i += 4) {
+      const chunk = valid.slice(i, i + 4)
+      chunks.push({
+        title: chunk[0]?.name || `Category ${Math.floor(i/4) + 1}`,
+        links: chunk.map(c => ({ name: c.name, slug: c.slug })),
+      })
+    }
+    return chunks
+  }, [categories])
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -96,7 +98,7 @@ export function Header({ categories = [] }: HeaderProps) {
       <div className="hidden lg:flex border-b bg-muted/30">
         <div className="container mx-auto px-4 py-1.5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <span className="text-[13px] text-muted-foreground">Need help? Call Us: <strong className="text-foreground text-base">1900 - 888</strong></span>
+            <span className="text-[13px] text-muted-foreground">{supportText} <strong className="text-foreground text-base">{supportPhone}</strong></span>
           </div>
           <div className="flex items-center gap-4 text-[13px] text-muted-foreground">
             <span className="flex items-center gap-1"><Bell className="h-3.5 w-3.5" /> EN | USD</span>
@@ -289,11 +291,11 @@ export function Header({ categories = [] }: HeaderProps) {
               )}
             </div>
 
-            <a href="tel:1900888" className="hidden lg:flex items-center gap-2">
+            <a href={`tel:${supportPhone.replace(/\s+/g, '')}`} className="hidden lg:flex items-center gap-2">
               <Phone className="h-6 w-6 text-brand-green" />
               <div className="leading-tight">
                 <p className="text-[13px] text-muted-foreground">24/7 Support</p>
-                <p className="font-semibold text-base">1900 - 888</p>
+                <p className="font-semibold text-base">{supportPhone}</p>
               </div>
             </a>
 
@@ -330,19 +332,20 @@ export function Header({ categories = [] }: HeaderProps) {
             >
               <div className="flex gap-8">
                 <div className="flex-1 grid grid-cols-3 gap-8">
-                  {megaMenuLinks.map((col) => (
+                  {groupedCategories.map((col) => (
                     <div key={col.title}>
                       <h5 className="text-sm font-semibold text-brand-green mb-3">{col.title}</h5>
                       <ul className="space-y-2">
                         {col.links.map((ln) => (
-                          <li key={ln}>
-                            <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-default">{ln}</span>
+                          <li key={ln.slug}>
+                            <a href={`/categories/${ln.slug}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{ln.name}</a>
                           </li>
                         ))}
                       </ul>
                     </div>
                   ))}
                 </div>
+                {megaMenuBannerEnabled && (
                 <div className="w-96 shrink-0 bg-gradient-to-br from-brand-green/10 to-emerald-50 rounded-xl p-6 flex flex-col justify-center border relative overflow-hidden">
                   <div className="absolute inset-0 opacity-10">
                     <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=500&fit=crop" alt="" className="h-full w-full object-cover" />
@@ -354,6 +357,7 @@ export function Header({ categories = [] }: HeaderProps) {
                     <Button className="bg-brand-green hover:bg-brand-green/90 text-white text-xs h-9 w-fit">Shop Now</Button>
                   </div>
                 </div>
+                )}
               </div>
             </div>
           )}

@@ -386,7 +386,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
             <PriceDisplay price={product.price} comparePrice={product.compare_price} size="lg" unit={product.unit} />
 
-            <p className="text-muted-foreground text-sm leading-relaxed">{product.short_description || product.description}</p>
+            <p className="text-muted-foreground text-base leading-relaxed">{product.short_description || product.description}</p>
 
             {product.vendor && (
               <div className="flex items-center gap-3 bg-muted/30 rounded-xl p-3 border">

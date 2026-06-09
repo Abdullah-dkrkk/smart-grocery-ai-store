@@ -1,14 +1,12 @@
 "use client"
 
-import { Suspense, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AuthSlider } from "@/components/auth/auth-slider"
-import { Eye, EyeOff, ChevronLeft, Loader2 } from "lucide-react"
-import { loginSchema } from "@/lib/validations"
+import { ChevronLeft, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   return (
@@ -19,31 +17,18 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const [csrfToken, setCsrfToken] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const error = searchParams.get("error")
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard?role=user"
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError("")
-    const parsed = loginSchema.safeParse({ email, password })
-    if (!parsed.success) { setError(parsed.error.issues[0].message); return }
-    setLoading(true)
-
-    try {
-      const result = await signIn("credentials", { email, password, redirect: false })
-      if (result?.error) { setError("Invalid email or password"); setLoading(false); return }
-      router.push(searchParams.get("callbackUrl") || "/")
-      router.refresh()
-    } catch {
-      setError("Something went wrong. Please try again.")
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    fetch("/api/auth/csrf")
+      .then((r) => r.json())
+      .then((d) => setCsrfToken(d.csrfToken))
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-background lg:bg-muted/30">
@@ -66,42 +51,40 @@ function LoginForm() {
               <p className="text-muted-foreground mt-2 text-lg">Sign in to your account to continue</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-lg">
-                  {error}
-                </div>
-              )}
+            {error && (
+              <div className="mb-5 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                Invalid email or password. Please try again.
+              </div>
+            )}
+
+            <form
+              action="/api/auth/callback/credentials"
+              method="POST"
+              onSubmit={() => setLoading(true)}
+              className="space-y-5"
+            >
+              <input type="hidden" name="csrfToken" value={csrfToken} />
+              <input type="hidden" name="callbackUrl" value={callbackUrl} />
 
               <div>
                 <label htmlFor="email" className="block text-lg font-medium mb-1.5">Email</label>
                 <Input
-                  id="email" type="email" autoComplete="email"
-                  value={email} onChange={(e) => setEmail(e.target.value)}
+                  id="email" name="email" type="email" autoComplete="email"
                   placeholder="you@example.com"
                   className="text-[14px]"
+                  required
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-lg font-medium mb-1.5">Password</label>
-                <div className="relative">
                 <Input
-                  id="password" type={showPassword ? "text" : "password"}
+                  id="password" name="password" type="password"
                   autoComplete="current-password"
-                  value={password} onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pr-11 text-[14px]"
+                  className="text-[14px]"
+                  required
                 />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground outline-none focus:outline-none active:outline-none"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
               </div>
 
               <div className="flex items-center justify-between">
