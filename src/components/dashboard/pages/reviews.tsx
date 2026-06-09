@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { Star, AlertCircle, MessageSquare } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { AlertCircle, MessageSquare } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StarRating } from "@/components/common/star-rating"
-import { ordersApi } from "@/lib/api/orders"
-import { setAuthToken } from "@/lib/api/config"
-import type { Order } from "@/lib/api/types"
+import { reviewsApi, setAuthToken } from "@/lib/api"
+import type { ReviewItem } from "@/lib/api/types"
 
 export function Reviews() {
   const { data: session, status: authStatus } = useSession()
-  const [orders, setOrders] = useState<Order[]>([])
+  const [reviews, setReviews] = useState<ReviewItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,12 +24,9 @@ export function Reviews() {
     }
     setAuthToken(session.user.token)
     setLoading(true)
-    ordersApi.history(1, 50)
-      .then((res) => {
-        const data = res.data || []
-        setOrders(data.filter((o: Order) => o.status === "delivered"))
-      })
-      .catch((err) => setError(err.message || "Failed to load data."))
+    reviewsApi.myReviews()
+      .then((res) => setReviews(res.data || []))
+      .catch((err) => setError(err.message || "Failed to load reviews."))
       .finally(() => setLoading(false))
   }, [authStatus, session])
 
@@ -65,23 +61,21 @@ export function Reviews() {
     )
   }
 
-  const deliveredOrders = orders
-
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold">My Reviews</h2>
-        <p className="text-base text-muted-foreground">Rate and review your purchased products.</p>
+        <p className="text-base text-muted-foreground">Your reviews and ratings.</p>
       </div>
 
-      {deliveredOrders.length === 0 ? (
+      {reviews.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
               <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
             </div>
             <h3 className="text-lg font-semibold mb-1">No reviews yet</h3>
-            <p className="text-sm text-muted-foreground mb-6">You can review products after they are delivered.</p>
+            <p className="text-sm text-muted-foreground mb-6">You haven&apos;t written any reviews yet.</p>
             <a href="/products" className="inline-flex items-center justify-center rounded-lg bg-brand-green hover:bg-brand-green/90 text-white h-10 px-6 text-sm font-medium transition-all">
               Start Shopping
             </a>
@@ -89,30 +83,26 @@ export function Reviews() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {deliveredOrders.map((order) => (
-            <Card key={order.id}>
+          {reviews.map((review) => (
+            <Card key={review.id}>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-medium">Order #{order.order_number}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
+                  <p className="text-sm font-medium">Product #{review.product_id}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>
                 </div>
-                <div className="space-y-3">
-                  {(order.items || []).slice(0, 3).map((item) => (
-                    <div key={item.id} className="flex items-center justify-between py-2 border-t">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.product_name}</p>
-                        <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <StarRating rating={0} size="sm" />
-                        <button className="text-xs text-brand-green hover:underline cursor-pointer">Write Review</button>
-                      </div>
-                    </div>
-                  ))}
-                  {(order.items || []).length > 3 && (
-                    <p className="text-xs text-muted-foreground text-center pt-1">+{order.items.length - 3} more items</p>
-                  )}
+                <div className="flex items-center gap-2 mb-2">
+                  <StarRating rating={review.rating} size="sm" />
+                  <span className="text-sm text-muted-foreground">({review.rating}/5)</span>
                 </div>
+                {review.comment && (
+                  <p className="text-sm text-muted-foreground mt-2">{review.comment}</p>
+                )}
+                {review.vendor_reply && (
+                  <div className="mt-3 pl-4 border-l-2 border-muted">
+                    <p className="text-xs font-medium text-muted-foreground">Vendor reply:</p>
+                    <p className="text-sm mt-1">{review.vendor_reply}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

@@ -1,10 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { Star, AlertCircle, MessageSquare } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StarRating } from "@/components/common/star-rating"
+import { vendorReviewsApi } from "@/lib/api/vendor-reviews"
+import { setAuthToken } from "@/lib/api/config"
 
 interface VendorReview {
   id: number
@@ -16,25 +19,52 @@ interface VendorReview {
   replied: boolean
 }
 
-const mockReviews: VendorReview[] = [
-  { id: 1, customer: "Alice J.", product: "Organic Fresh Apples", rating: 5, comment: "Best apples I've ever bought! Very fresh and sweet.", date: "2026-06-05", replied: true },
-  { id: 2, customer: "Bob K.", product: "Whole Wheat Bread", rating: 4, comment: "Good quality bread, stays fresh for days.", date: "2026-06-03", replied: false },
-  { id: 3, customer: "Carol M.", product: "Free Range Eggs (12pk)", rating: 5, comment: "Excellent quality eggs. Will order again!", date: "2026-06-01", replied: true },
-]
-
 export function VendorReviews() {
+  const { data: session, status: authStatus } = useSession()
   const [reviews, setReviews] = useState<VendorReview[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const t = setTimeout(() => { setReviews(mockReviews); setLoading(false) }, 600)
-    return () => clearTimeout(t)
-  }, [])
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false); setError("Please sign in.")
+      return
+    }
+    setAuthToken(session.user.token)
+    vendorReviewsApi.list()
+      .then((res) => {
+        const mapped: VendorReview[] = (res.data || []).map((item: any) => ({
+          id: item.id,
+          customer: item.user?.name || `Customer #${item.user_id}`,
+          product: item.product?.name || `Product #${item.product_id}`,
+          rating: item.rating,
+          comment: item.comment || "",
+          date: item.created_at,
+          replied: !!item.vendor_reply,
+        }))
+        setReviews(mapped)
+      })
+      .catch((err) => setError(err.message || "Failed to load reviews."))
+      .finally(() => setLoading(false))
+  }, [authStatus, session])
 
   if (loading) return (
     <div className="space-y-6">
       <div className="space-y-2"><h2 className="text-2xl font-semibold">Reviews</h2><p className="text-base text-muted-foreground">Loading reviews...</p></div>
       {[1,2,3].map((i) => <div key={i} className="h-24 bg-card border rounded-xl animate-pulse" />)}
+    </div>
+  )
+
+  if (error) return (
+    <div className="space-y-6">
+      <Card><CardContent className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Unable to load reviews</h3>
+        <p className="text-sm text-muted-foreground mb-6">{error}</p>
+      </CardContent></Card>
     </div>
   )
 

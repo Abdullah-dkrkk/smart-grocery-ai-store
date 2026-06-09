@@ -1,13 +1,16 @@
 "use client"
 
-import { useState } from "react"
-import { MapPin, Plus, Pencil, Trash2, Home, Briefcase } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { MapPin, Plus, Pencil, Trash2, Home, Briefcase, AlertCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { addressesApi, setAuthToken } from "@/lib/api"
+import type { Address as ApiAddress } from "@/lib/api/addresses"
 
 interface AddressItem {
-  id: string
+  id: number
   label: string
   street: string
   city: string
@@ -17,15 +20,53 @@ interface AddressItem {
   type: "home" | "work"
 }
 
-const defaultAddresses: AddressItem[] = [
-  { id: "1", label: "Home", street: "123 Main Street, Apt 4B", city: "New York", state: "NY", zip: "10001", isDefault: true, type: "home" },
-]
+function fromApi(addr: ApiAddress): AddressItem {
+  return {
+    id: addr.id,
+    label: addr.label,
+    street: addr.address_line1,
+    city: addr.city,
+    state: addr.state,
+    zip: addr.zip,
+    isDefault: addr.is_default,
+    type: "home",
+  }
+}
+
+function toInput(form: { label: string; street: string; city: string; state: string; zip: string; type: "home" | "work" }) {
+  return {
+    label: form.label,
+    address_line1: form.street,
+    city: form.city,
+    state: form.state,
+    zip: form.zip,
+  }
+}
 
 export function Addresses() {
-  const [addresses, setAddresses] = useState<AddressItem[]>(defaultAddresses)
+  const { data: session, status: authStatus } = useSession()
+  const [addresses, setAddresses] = useState<AddressItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState<{ label: string; street: string; city: string; state: string; zip: string; type: "home" | "work" }>({ label: "", street: "", city: "", state: "", zip: "", type: "home" })
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false)
+      setError("Please sign in to view your addresses.")
+      return
+    }
+    setAuthToken(session.user.token)
+    setLoading(true)
+    addressesApi.list()
+      .then((res) => setAddresses((res.data || []).map(fromApi)))
+      .catch((err) => setError(err.message || "Failed to load addresses."))
+      .finally(() => setLoading(false))
+  }, [authStatus, session])
 
   const resetForm = () => {
     setForm({ label: "", street: "", city: "", state: "", zip: "", type: "home" })
@@ -33,18 +74,38 @@ export function Addresses() {
     setShowForm(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editingId) {
-      setAddresses((prev) => prev.map((a) => a.id === editingId ? { ...a, ...form } : a))
-    } else {
-      setAddresses((prev) => [...prev, { ...form, id: String(Date.now()), isDefault: prev.length === 0 }])
+    if (!session?.user?.token) return
+    setAuthToken(session.user.token)
+    setSaving(true)
+    try {
+      if (editingId) {
+        const res = await addressesApi.update(editingId, toInput(form))
+        setAddresses((prev) => prev.map((a) => a.id === editingId ? fromApi(res.data) : a))
+      } else {
+        const res = await addressesApi.create(toInput(form))
+        setAddresses((prev) => [...prev, fromApi(res.data)])
+      }
+      resetForm()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save address."
+      setError(msg)
+    } finally {
+      setSaving(false)
     }
-    resetForm()
   }
 
-  const handleDelete = (id: string) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id))
+  const handleDelete = async (id: number) => {
+    if (!session?.user?.token) return
+    setAuthToken(session.user.token)
+    try {
+      await addressesApi.destroy(id)
+      setAddresses((prev) => prev.filter((a) => a.id !== id))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to delete address."
+      setError(msg)
+    }
   }
 
   const handleEdit = (addr: AddressItem) => {
@@ -53,8 +114,47 @@ export function Addresses() {
     setShowForm(true)
   }
 
-  const setDefault = (id: string) => {
-    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })))
+  const setDefault = async (id: number) => {
+    if (!session?.user?.token) return
+    setAuthToken(session.user.token)
+    try {
+      await addressesApi.update(id, { is_default: true })
+      setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to set default address."
+      setError(msg)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold">Addresses</h2>
+          <p className="text-base text-muted-foreground">Loading your addresses...</p>
+        </div>
+        {[1, 2].map((i) => (
+          <div key={i} className="h-28 bg-card border rounded-xl animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Unable to load addresses</h3>
+            <p className="text-sm text-muted-foreground mb-6">{error}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -107,7 +207,7 @@ export function Addresses() {
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <Button type="submit">{editingId ? "Update" : "Save"} Address</Button>
+                <Button type="submit" disabled={saving}>{editingId ? "Update" : "Save"} Address</Button>
                 <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
               </div>
             </form>

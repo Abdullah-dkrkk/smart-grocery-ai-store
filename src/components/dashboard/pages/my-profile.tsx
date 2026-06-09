@@ -41,12 +41,20 @@ export function MyProfile() {
   }, [authStatus, session])
 
   const handleSave = async () => {
+    if (!session?.user?.token) return
+    setAuthToken(session.user.token)
     setSaving(true)
     setSaved(false)
-    await new Promise((r) => setTimeout(r, 800))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      await authApi.updateProfile({ name, email })
+      setProfile((prev) => prev ? { ...prev, name, email } : prev)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to update profile.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) {

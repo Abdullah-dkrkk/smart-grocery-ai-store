@@ -1,13 +1,16 @@
 "use client"
 
-import { useState } from "react"
-import { CreditCard, Plus, Trash2, CheckCircle } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { CreditCard, Plus, Trash2, CheckCircle, AlertCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { paymentMethodsApi, setAuthToken } from "@/lib/api"
+import type { PaymentMethod as ApiPaymentMethod } from "@/lib/api/payment-methods"
 
 interface PaymentMethod {
-  id: string
+  id: number
   type: "visa" | "mastercard" | "amex"
   last4: string
   expiry: string
@@ -15,36 +18,118 @@ interface PaymentMethod {
   isDefault: boolean
 }
 
-const defaultMethods: PaymentMethod[] = [
-  { id: "1", type: "visa", last4: "4242", expiry: "12/28", name: "John Doe", isDefault: true },
-]
-
 const cardIcons: Record<string, string> = {
   visa: "Visa",
   mastercard: "MC",
   amex: "Amex",
 }
 
+function fromApi(pm: ApiPaymentMethod): PaymentMethod {
+  return {
+    id: pm.id,
+    type: pm.card_type as PaymentMethod["type"],
+    last4: pm.last_four,
+    expiry: `${pm.expiry_month}/${pm.expiry_year.slice(-2)}`,
+    name: pm.cardholder_name,
+    isDefault: pm.is_default,
+  }
+}
+
 export function PaymentMethods() {
-  const [methods, setMethods] = useState<PaymentMethod[]>(defaultMethods)
+  const { data: session, status: authStatus } = useSession()
+  const [methods, setMethods] = useState<PaymentMethod[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ number: "", expiry: "", cvc: "", name: "" })
+  const [saving, setSaving] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false)
+      setError("Please sign in to view your payment methods.")
+      return
+    }
+    setAuthToken(session.user.token)
+    setLoading(true)
+    paymentMethodsApi.list()
+      .then((res) => setMethods((res.data || []).map(fromApi)))
+      .catch((err) => setError(err.message || "Failed to load payment methods."))
+      .finally(() => setLoading(false))
+  }, [authStatus, session])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const last4 = form.number.slice(-4)
-    const type: PaymentMethod["type"] = form.number.startsWith("4") ? "visa" : form.number.startsWith("5") ? "mastercard" : "amex"
-    setMethods((prev) => [...prev, { id: String(Date.now()), type, last4, expiry: form.expiry, name: form.name, isDefault: prev.length === 0 }])
-    setForm({ number: "", expiry: "", cvc: "", name: "" })
-    setShowForm(false)
+    if (!session?.user?.token) return
+    setAuthToken(session.user.token)
+    setSaving(true)
+    try {
+      const cardType = form.number.startsWith("4") ? "visa" : form.number.startsWith("5") ? "mastercard" : "amex"
+      const [expMonth, expYear] = form.expiry.split("/")
+      const res = await paymentMethodsApi.create({
+        card_type: cardType,
+        last_four: form.number.slice(-4),
+        expiry_month: expMonth,
+        expiry_year: expYear,
+        cardholder_name: form.name,
+      })
+      setMethods((prev) => [...prev, fromApi(res.data)])
+      setForm({ number: "", expiry: "", cvc: "", name: "" })
+      setShowForm(false)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save card."
+      setError(msg)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const handleDelete = (id: string) => {
-    setMethods((prev) => prev.filter((m) => m.id !== id))
+  const handleDelete = async (id: number) => {
+    if (!session?.user?.token) return
+    setAuthToken(session.user.token)
+    try {
+      await paymentMethodsApi.destroy(id)
+      setMethods((prev) => prev.filter((m) => m.id !== id))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to delete card."
+      setError(msg)
+    }
   }
 
-  const setDefault = (id: string) => {
+  const setDefault = (id: number) => {
     setMethods((prev) => prev.map((m) => ({ ...m, isDefault: m.id === id })))
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold">Payment Methods</h2>
+          <p className="text-base text-muted-foreground">Loading your payment methods...</p>
+        </div>
+        {[1, 2].map((i) => (
+          <div key={i} className="h-24 bg-card border rounded-xl animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Unable to load payment methods</h3>
+            <p className="text-sm text-muted-foreground mb-6">{error}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -85,7 +170,7 @@ export function PaymentMethods() {
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <Button type="submit">Save Card</Button>
+                <Button type="submit" disabled={saving}>Save Card</Button>
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
               </div>
             </form>

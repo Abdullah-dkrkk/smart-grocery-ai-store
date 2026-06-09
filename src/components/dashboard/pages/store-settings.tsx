@@ -1,32 +1,93 @@
 "use client"
 
-import { useState } from "react"
-import { Store, Save, Loader2, CheckCircle } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { Store, Save, Loader2, CheckCircle, AlertCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { vendorStoreApi } from "@/lib/api/vendor-store"
+import { setAuthToken } from "@/lib/api/config"
 
 export function StoreSettings() {
+  const { data: session, status: authStatus } = useSession()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [form, setForm] = useState({
-    storeName: "My Grocery Store",
-    slug: "my-grocery-store",
-    email: "store@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Commerce St",
-    description: "Fresh groceries delivered to your doorstep.",
-    returnPolicy: "30-day return policy for unopened items.",
+    storeName: "",
+    slug: "",
+    email: "",
+    phone: "",
+    address: "",
+    description: "",
+    returnPolicy: "",
   })
+
+  useEffect(() => {
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false); setError("Please sign in.")
+      return
+    }
+    setAuthToken(session.user.token)
+    vendorStoreApi.show()
+      .then((res) => {
+        const s = res.data
+        setForm({
+          storeName: s.store_name || "",
+          slug: "",
+          email: s.contact_email || "",
+          phone: s.contact_phone || "",
+          address: "",
+          description: s.store_description || "",
+          returnPolicy: s.store_policy || "",
+        })
+      })
+      .catch((err) => setError(err.message || "Failed to load store settings."))
+      .finally(() => setLoading(false))
+  }, [authStatus, session])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setSaved(false)
+    try {
+      await vendorStoreApi.update({
+        store_name: form.storeName,
+        store_description: form.description,
+        store_policy: form.returnPolicy,
+        contact_email: form.email,
+        contact_phone: form.phone,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err: any) {
+      setError(err.message || "Failed to save.")
+    } finally {
+      setSaving(false)
+    }
   }
+
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="space-y-2"><h2 className="text-2xl font-semibold">Store Settings</h2><p className="text-base text-muted-foreground">Loading store settings...</p></div>
+      {[1,2,3].map((i) => <div key={i} className="h-24 bg-card border rounded-xl animate-pulse" />)}
+    </div>
+  )
+
+  if (error) return (
+    <div className="space-y-6">
+      <Card><CardContent className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Unable to load store settings</h3>
+        <p className="text-sm text-muted-foreground mb-6">{error}</p>
+      </CardContent></Card>
+    </div>
+  )
 
   return (
     <div className="space-y-6">

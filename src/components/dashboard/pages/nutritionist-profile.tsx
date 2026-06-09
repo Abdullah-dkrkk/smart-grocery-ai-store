@@ -1,31 +1,109 @@
 "use client"
 
-import { useState } from "react"
-import { Save, Loader2, CheckCircle, User, Star } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { Save, Loader2, CheckCircle, User, AlertCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { nutritionistProfileApi } from "@/lib/api/nutritionist-profile"
+import { setAuthToken } from "@/lib/api/config"
 
 export function NutritionistProfile() {
+  const { data: session, status: authStatus } = useSession()
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
-    name: "Dr. Sarah Nutritionist",
-    email: "sarah@smartgrocery.com",
-    phone: "+1 (555) 987-6543",
-    specialization: "Clinical Nutrition, Weight Management",
-    experience: "8 years",
-    qualifications: "PhD in Nutrition Science, Registered Dietitian",
-    bio: "Passionate about helping people achieve their health goals through evidence-based nutrition advice.",
+    name: "",
+    email: "",
+    phone: "",
+    specialization: "",
+    experience: "",
+    qualifications: "",
+    bio: "",
   })
+
+  useEffect(() => {
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false)
+      setError("Please sign in to view your profile.")
+      return
+    }
+    setAuthToken(session.user.token)
+    setLoading(true)
+    nutritionistProfileApi.show()
+      .then((res) => {
+        const data = res.data || res
+        setForm({
+          name: (data as any).name ?? "",
+          email: (data as any).email ?? "",
+          phone: (data as any).phone ?? "",
+          specialization: data.specialization ?? "",
+          experience: data.experience_years ? `${data.experience_years} years` : "",
+          qualifications: data.qualifications ?? "",
+          bio: data.bio ?? "",
+        })
+      })
+      .catch((err) => setError(err.message || "Failed to load profile."))
+      .finally(() => setLoading(false))
+  }, [authStatus, session])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setSaved(false)
+    setError(null)
+    try {
+      await nutritionistProfileApi.update({
+        specialization: form.specialization || undefined,
+        qualifications: form.qualifications || undefined,
+        bio: form.bio || undefined,
+        experience_years: form.experience ? parseInt(form.experience) || undefined : undefined,
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save profile.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold">Profile</h2>
+          <p className="text-base text-muted-foreground">Loading your profile...</p>
+        </div>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 bg-card border rounded-xl animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (error && !form.name) {
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold">Profile</h2>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Unable to load profile</h3>
+            <p className="text-sm text-muted-foreground mb-6">{error}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -34,6 +112,13 @@ export function NutritionistProfile() {
         <h2 className="text-2xl font-semibold">Profile</h2>
         <p className="text-base text-muted-foreground">Manage your professional profile and credentials.</p>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSave}>
         <Card>

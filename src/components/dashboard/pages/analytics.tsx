@@ -1,37 +1,91 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { BarChart3, TrendingUp, Users, ShoppingBag, DollarSign, Activity } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { BarChart3, TrendingUp, Users, ShoppingBag, DollarSign, Activity, AlertCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { adminApi } from "@/lib/api/admin"
+import { setAuthToken } from "@/lib/api/config"
+
+interface StatItem {
+  icon: React.ElementType
+  label: string
+  value: string
+  change: string
+  color: string
+}
+
+interface TopProduct {
+  name: string
+  sold: number
+  revenue: string
+  trend: string
+}
+
+const statConfig: { key: string; label: string; icon: React.ElementType; color: string }[] = [
+  { key: "active_users", label: "Active Users", icon: Users, color: "bg-brand-green/10 text-brand-green" },
+  { key: "total_orders", label: "Total Orders", icon: ShoppingBag, color: "bg-blue-50 text-blue-600" },
+  { key: "revenue", label: "Revenue", icon: DollarSign, color: "bg-brand-orange/10 text-brand-orange" },
+  { key: "conversion_rate", label: "Conversion Rate", icon: Activity, color: "bg-purple-50 text-purple-600" },
+]
 
 export function Analytics() {
+  const { data: session, status: authStatus } = useSession()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [statsData, setStatsData] = useState<Record<string, unknown>>({})
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([])
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 800)
-    return () => clearTimeout(t)
-  }, [])
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false)
+      setError("Please sign in.")
+      return
+    }
+    setAuthToken(session.user.token)
+    setLoading(true)
+    Promise.all([
+      adminApi.analytics(),
+      adminApi.trends(),
+    ])
+      .then(([analyticsRes]) => {
+        const d = analyticsRes.data || {}
+        setStatsData((d.stats || {}) as Record<string, unknown>)
+        setTopProducts((d.top_products || []) as TopProduct[])
+      })
+      .catch((err) => setError(err.message || "Failed to load analytics."))
+      .finally(() => setLoading(false))
+  }, [authStatus, session])
 
-  const stats = [
-    { icon: Users, label: "Active Users", value: "1,284", change: "+12%", color: "bg-brand-green/10 text-brand-green" },
-    { icon: ShoppingBag, label: "Total Orders", value: "3,567", change: "+8%", color: "bg-blue-50 text-blue-600" },
-    { icon: DollarSign, label: "Revenue", value: "$142,890", change: "+15%", color: "bg-brand-orange/10 text-brand-orange" },
-    { icon: Activity, label: "Conversion Rate", value: "3.2%", change: "+0.5%", color: "bg-purple-50 text-purple-600" },
-  ]
-
-  const topProducts = [
-    { name: "Organic Fresh Apples", sold: 456, revenue: "$3,647", trend: "up" },
-    { name: "Whole Wheat Bread", sold: 389, revenue: "$1,945", trend: "up" },
-    { name: "Free Range Eggs (12pk)", sold: 342, revenue: "$2,736", trend: "up" },
-    { name: "Organic Milk 1 Gallon", sold: 298, revenue: "$1,788", trend: "down" },
-    { name: "Fresh Salmon Fillet", sold: 267, revenue: "$4,005", trend: "up" },
-  ]
+  const stats: StatItem[] = statConfig.map(({ key, label, icon, color }) => {
+    const s = statsData[key] as Record<string, unknown> | undefined
+    return {
+      icon,
+      label,
+      value: typeof s?.value === "string" ? s.value : s?.value !== undefined ? String(s.value) : "0",
+      change: (s?.change as string) ?? "0%",
+      color,
+    }
+  })
 
   if (loading) return (
     <div className="space-y-6">
       <div className="space-y-2"><h2 className="text-2xl font-semibold">Analytics</h2><p className="text-base text-muted-foreground">Loading analytics...</p></div>
       {[1,2,3,4].map((i) => <div key={i} className="h-24 bg-card border rounded-xl animate-pulse" />)}
     </div>
+  )
+
+  if (error) return (
+    <Card><CardContent className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+      </div>
+      <h3 className="text-lg font-semibold mb-2">Unable to load analytics</h3>
+      <p className="text-sm text-muted-foreground mb-6">{error}</p>
+      <Button variant="outline" onClick={() => window.location.reload()}>Try Again</Button>
+    </CardContent></Card>
   )
 
   return (
@@ -82,21 +136,25 @@ export function Analytics() {
         <Card>
           <CardHeader><CardTitle>Top Selling Products</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {topProducts.map((p, i) => (
-              <div key={p.name} className="flex items-center justify-between py-2 border-b last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-muted-foreground w-5">{i + 1}</span>
-                  <div>
-                    <p className="text-sm font-medium">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{p.sold} sold</p>
+            {topProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No product data available.</p>
+            ) : (
+              topProducts.map((p, i) => (
+                <div key={p.name} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-muted-foreground w-5">{i + 1}</span>
+                    <div>
+                      <p className="text-sm font-medium">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.sold} sold</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{p.revenue}</p>
+                    <TrendingUp className={`h-3 w-3 ml-auto ${p.trend === "up" ? "text-brand-green" : "text-destructive"}`} />
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{p.revenue}</p>
-                  <TrendingUp className={`h-3 w-3 ml-auto ${p.trend === "up" ? "text-brand-green" : "text-destructive"}`} />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { Users, Search, AlertCircle, Shield, Store, Stethoscope, User } from "lucide-react"
+import { Users, Search, AlertCircle, Shield, Store, User, Loader2, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -31,20 +31,52 @@ export function AdminUsers() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
+  const [actionLoading, setActionLoading] = useState<number | null>(null)
 
-  useEffect(() => {
-    if (authStatus === "loading") return
-    if (authStatus !== "authenticated" || !session?.user?.token) {
-      setLoading(false); setError("Please sign in.")
-      return
-    }
+  const fetchUsers = () => {
+    if (authStatus === "loading" || authStatus !== "authenticated" || !session?.user?.token) return
     setAuthToken(session.user.token)
     setLoading(true)
     adminApi.users()
       .then((res) => setUsers(res.data || []))
       .catch((err) => setError(err.message || "Failed to load users."))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false)
+      setError("Please sign in.")
+      return
+    }
+    fetchUsers()
   }, [authStatus, session])
+
+  const handleRoleUpdate = async (id: number, role: string) => {
+    setActionLoading(id)
+    try {
+      await adminApi.updateUser(id, { role: role as UserType["role"] })
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role: role as UserType["role"] } : u)))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update user role.")
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return
+    setActionLoading(id)
+    try {
+      await adminApi.deleteUser(id)
+      setUsers((prev) => prev.filter((u) => u.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete user.")
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   const filtered = users.filter((u) => {
     const mS = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
@@ -78,6 +110,12 @@ export function AdminUsers() {
           <p className="text-base text-muted-foreground">Manage all platform users. ({filtered.length} users)</p>
         </div>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-lg">
+          <AlertCircle className="h-4 w-4 shrink-0" />{error}
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="relative w-full sm:w-72">
@@ -123,7 +161,30 @@ export function AdminUsers() {
                     </div>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground shrink-0">Joined {new Date(user.created_at).toLocaleDateString()}</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {actionLoading === user.id ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <select
+                          value={user.role}
+                          onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
+                          className="h-8 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="customer">customer</option>
+                          <option value="vendor">vendor</option>
+                          <option value="admin">admin</option>
+                        </select>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Delete user"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )

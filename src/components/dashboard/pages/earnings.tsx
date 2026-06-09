@@ -1,36 +1,56 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Calendar } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { vendorEarningsApi, type VendorEarningsOverview, type VendorTransaction } from "@/lib/api/vendor-earnings"
+import { setAuthToken } from "@/lib/api/config"
 
 export function Earnings() {
+  const { data: session, status: authStatus } = useSession()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<VendorEarningsOverview | null>(null)
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 800)
-    return () => clearTimeout(t)
-  }, [])
+    if (authStatus === "loading") return
+    if (authStatus !== "authenticated" || !session?.user?.token) {
+      setLoading(false); setError("Please sign in.")
+      return
+    }
+    setAuthToken(session.user.token)
+    vendorEarningsApi.overview()
+      .then((res) => setData(res.data))
+      .catch((err) => setError(err.message || "Failed to load earnings."))
+      .finally(() => setLoading(false))
+  }, [authStatus, session])
 
   const stats = [
-    { label: "Total Revenue", value: "$12,450", change: "+12.5%", up: true, color: "bg-brand-green/10 text-brand-green" },
-    { label: "This Month", value: "$3,280", change: "+8.2%", up: true, color: "bg-blue-50 text-blue-600" },
-    { label: "Pending Payouts", value: "$1,150", change: "-", up: false, color: "bg-yellow-50 text-yellow-600" },
-    { label: "Avg. Order Value", value: "$45.20", change: "+3.1%", up: true, color: "bg-brand-orange/10 text-brand-orange" },
+    { label: "Total Revenue", value: data ? `$${parseFloat(data.total_revenue).toLocaleString()}` : "$0", change: "-", up: true, color: "bg-brand-green/10 text-brand-green" },
+    { label: "This Month", value: data ? `$${parseFloat(data.this_month).toLocaleString()}` : "$0", change: "-", up: true, color: "bg-blue-50 text-blue-600" },
+    { label: "Pending Payouts", value: data ? `$${parseFloat(data.pending_payouts).toLocaleString()}` : "$0", change: "-", up: false, color: "bg-yellow-50 text-yellow-600" },
+    { label: "Avg. Order Value", value: data ? `$${parseFloat(data.avg_order_value).toLocaleString()}` : "$0", change: "-", up: true, color: "bg-brand-orange/10 text-brand-orange" },
   ]
 
-  const transactions = [
-    { id: "TXN-001", order: "#ORD-1024", amount: "$89.50", status: "Completed", date: "2026-06-08", fee: "$2.68" },
-    { id: "TXN-002", order: "#ORD-1023", amount: "$45.00", status: "Completed", date: "2026-06-07", fee: "$1.35" },
-    { id: "TXN-003", order: "#ORD-1022", amount: "$120.00", status: "Pending", date: "2026-06-06", fee: "$3.60" },
-    { id: "TXN-004", order: "#ORD-1021", amount: "$32.75", status: "Completed", date: "2026-06-05", fee: "$0.98" },
-    { id: "TXN-005", order: "#ORD-1020", amount: "$67.25", status: "Completed", date: "2026-06-04", fee: "$2.02" },
-  ]
+  const transactions: VendorTransaction[] = data?.transactions || []
 
   if (loading) return (
     <div className="space-y-6">
       <div className="space-y-2"><h2 className="text-2xl font-semibold">Earnings</h2><p className="text-base text-muted-foreground">Loading earnings data...</p></div>
       {[1,2,3,4].map((i) => <div key={i} className="h-24 bg-card border rounded-xl animate-pulse" />)}
+    </div>
+  )
+
+  if (error) return (
+    <div className="space-y-6">
+      <Card><CardContent className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+        </div>
+        <h3 className="text-lg font-semibold mb-2">Unable to load earnings</h3>
+        <p className="text-sm text-muted-foreground mb-6">{error}</p>
+      </CardContent></Card>
     </div>
   )
 
@@ -81,20 +101,24 @@ export function Earnings() {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((tx) => (
-                <tr key={tx.id} className="border-b last:border-0">
-                  <td className="py-3.5 pl-5 pr-3 text-sm">{tx.id}</td>
-                  <td className="py-3.5 px-3 text-sm">{tx.order}</td>
-                  <td className="py-3.5 px-3 text-sm font-medium">{tx.amount}</td>
-                  <td className="py-3.5 px-3 text-sm text-muted-foreground">{tx.fee}</td>
-                  <td className="py-3.5 px-3">
-                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                      tx.status === "Completed" ? "bg-brand-green/10 text-brand-green" : "bg-yellow-50 text-yellow-600"
-                    }`}>{tx.status}</span>
-                  </td>
-                  <td className="py-3.5 pl-3 pr-5 text-sm text-muted-foreground text-right">{tx.date}</td>
-                </tr>
-              ))}
+              {transactions.length === 0 ? (
+                <tr><td colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No transactions yet.</td></tr>
+              ) : (
+                transactions.map((tx) => (
+                  <tr key={tx.id} className="border-b last:border-0">
+                    <td className="py-3.5 pl-5 pr-3 text-sm">TXN-{String(tx.id).padStart(3, "0")}</td>
+                    <td className="py-3.5 px-3 text-sm">{tx.order_number}</td>
+                    <td className="py-3.5 px-3 text-sm font-medium">${parseFloat(tx.amount).toFixed(2)}</td>
+                    <td className="py-3.5 px-3 text-sm text-muted-foreground">${parseFloat(tx.fee).toFixed(2)}</td>
+                    <td className="py-3.5 px-3">
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                        tx.status === "Completed" || tx.status === "completed" || tx.status === "paid" ? "bg-brand-green/10 text-brand-green" : "bg-yellow-50 text-yellow-600"
+                      }`}>{tx.status}</span>
+                    </td>
+                    <td className="py-3.5 pl-3 pr-5 text-sm text-muted-foreground text-right">{new Date(tx.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </CardContent>

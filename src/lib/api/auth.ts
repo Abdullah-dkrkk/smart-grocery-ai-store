@@ -1,4 +1,4 @@
-import { get, post } from "./client"
+import { get, post, put } from "./client"
 import { setAuthToken } from "./config"
 import type { AuthResponse, User } from "./types"
 
@@ -37,5 +37,13 @@ export const authApi = {
     const res = await this.register(data)
     setAuthToken(res.data.token)
     return res.data
+  },
+
+  updateProfile(data: { name?: string; email?: string; phone?: string; avatar_url?: string }) {
+    return put<User>("/auth/me", data)
+  },
+
+  changePassword(data: { current_password: string; new_password: string; new_password_confirmation: string }) {
+    return put<{ message: string }>("/auth/change-password", data)
   },
 }

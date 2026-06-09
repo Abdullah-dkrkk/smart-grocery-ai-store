@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { productsApi } from "@/lib/api/products"
+import { vendorInventoryApi } from "@/lib/api/vendor-inventory"
 import { setAuthToken } from "@/lib/api/config"
 import type { Product } from "@/lib/api/types"
 
@@ -27,7 +27,7 @@ export function Inventory() {
     }
     setAuthToken(session.user.token)
     setLoading(true)
-    productsApi.vendorProducts()
+    vendorInventoryApi.list()
       .then((res) => setProducts(res.data || []))
       .catch((err) => setError(err.message || "Failed to load inventory."))
       .finally(() => setLoading(false))
