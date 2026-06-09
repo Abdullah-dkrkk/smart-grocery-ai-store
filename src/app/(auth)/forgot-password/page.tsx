@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AuthSlider } from "@/components/auth/auth-slider"
 import { ChevronLeft, Loader2, MailCheck } from "lucide-react"
+import { forgotPasswordSchema } from "@/lib/validations"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
@@ -18,7 +19,8 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
-    if (!email) { setError("Please enter your email"); return }
+    const parsed = forgotPasswordSchema.safeParse({ email })
+    if (!parsed.success) { setError(parsed.error.issues[0].message); return }
     setLoading(true)
 
     try {

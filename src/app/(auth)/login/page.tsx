@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AuthSlider } from "@/components/auth/auth-slider"
 import { Eye, EyeOff, ChevronLeft, Loader2 } from "lucide-react"
+import { loginSchema } from "@/lib/validations"
 
 export default function LoginPage() {
   return (
@@ -29,7 +30,8 @@ function LoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
-    if (!email || !password) { setError("Please fill in all fields"); return }
+    const parsed = loginSchema.safeParse({ email, password })
+    if (!parsed.success) { setError(parsed.error.issues[0].message); return }
     setLoading(true)
 
     try {

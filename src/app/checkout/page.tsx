@@ -13,6 +13,7 @@ import { Footer } from "@/components/store/footer"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCartContext } from "@/lib/providers/cart-provider"
 import { useCategories } from "@/lib/hooks/use-categories"
+import { checkoutSchema } from "@/lib/validations"
 import { ordersApi } from "@/lib/api/orders"
 import { cartApi } from "@/lib/api/cart"
 import { useValidateDiscount } from "@/lib/hooks/use-discounts"
@@ -101,17 +102,30 @@ export default function CheckoutPage() {
   }
 
   function validate(): boolean {
-    const errs: Partial<FormData> = {}
-    if (!form.firstName.trim()) errs.firstName = "Required"
-    if (!form.lastName.trim()) errs.lastName = "Required"
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Valid email required"
-    if (!form.phone.trim()) errs.phone = "Required"
-    if (!form.address.trim()) errs.address = "Required"
-    if (!form.city.trim()) errs.city = "Required"
-    if (!form.state.trim()) errs.state = "Required"
-    if (!form.zip.trim()) errs.zip = "Required"
-    setErrors(errs)
-    return Object.keys(errs).length === 0
+    const parsed = checkoutSchema.safeParse({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
+      address: form.address,
+      city: form.city,
+      state: form.state,
+      zipCode: form.zip,
+      country: "US",
+      notes: "",
+    })
+    if (!parsed.success) {
+      const errs: Record<string, string> = {}
+      for (const issue of parsed.error.issues) {
+        let field = issue.path[0] as string
+        if (field === "zipCode") field = "zip"
+        if (!errs[field]) errs[field] = issue.message
+      }
+      setErrors(errs)
+      return false
+    }
+    setErrors({})
+    return true
   }
 
   function handleReviewOrder() {

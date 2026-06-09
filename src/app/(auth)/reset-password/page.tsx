@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AuthSlider } from "@/components/auth/auth-slider"
 import { Eye, EyeOff, ChevronLeft, Loader2, CheckCircle } from "lucide-react"
+import { resetPasswordSchema } from "@/lib/validations"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
@@ -35,10 +36,9 @@ function ResetPasswordForm() {
     e.preventDefault()
     setError("")
 
-    if (!password || !confirmPassword) { setError("Please fill in all fields"); return }
-    if (password !== confirmPassword) { setError("Passwords do not match"); return }
-    if (password.length < 8) { setError("Password must be at least 8 characters"); return }
     if (!token || !emailParam) { setError("Invalid reset link"); return }
+    const parsed = resetPasswordSchema.safeParse({ email: emailParam, token, password, password_confirmation: confirmPassword })
+    if (!parsed.success) { setError(parsed.error.issues[0].message); return }
 
     setLoading(true)
 

@@ -1,21 +1,39 @@
 export const API_CONFIG = {
   baseUrl: "/api-proxy",
-  tokenKey: "auth_token",
   headers: {
     "Accept": "application/json",
     "Content-Type": "application/json",
   },
 }
 
+let memoryToken: string | null = null
+
 export function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem(API_CONFIG.tokenKey)
+  return memoryToken
 }
 
 export function setAuthToken(token: string): void {
-  localStorage.setItem(API_CONFIG.tokenKey, token)
+  memoryToken = token
+  syncTokenToCookie(token)
 }
 
 export function removeAuthToken(): void {
-  localStorage.removeItem(API_CONFIG.tokenKey)
+  memoryToken = null
+  syncClearCookie()
+}
+
+async function syncTokenToCookie(token: string) {
+  try {
+    await fetch("/api/auth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    })
+  } catch {}
+}
+
+async function syncClearCookie() {
+  try {
+    await fetch("/api/auth/token", { method: "DELETE" })
+  } catch {}
 }
