@@ -5,6 +5,7 @@ import Link from "next/link"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
+import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { QuantitySelector } from "@/components/common/quantity-selector"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,12 +22,6 @@ import { Trash2, CreditCard, Check, AlertCircle, Landmark, ShoppingBag, ArrowLef
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/toast"
 import type { DiscountValidation } from "@/lib/api/types"
-
-const announcements = [
-  { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
-  { text: "Free delivery on orders over $50 — shop now!" },
-  { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
-]
 
 type PaymentMethod = "card" | "cod" | "authorize"
 
@@ -609,8 +604,8 @@ export default function CheckoutPage() {
   if (step === "success") {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={categories} cartCount={0} />
+        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <Header categories={categories} />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Checkout" }]} className="mb-8" />
           <div className="max-w-lg mx-auto text-center py-16">
@@ -645,8 +640,8 @@ export default function CheckoutPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={categories} cartCount={0} />
+        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <Header categories={categories} />
         <main className="container mx-auto px-4 py-8">
           <Breadcrumbs items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} className="mb-6" />
           <Skeleton className="h-9 w-48 mb-8" />
@@ -744,8 +739,8 @@ export default function CheckoutPage() {
   if (items.length === 0 && !isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={categories} cartCount={0} />
+        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <Header categories={categories} />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Checkout" }]} className="mb-8" />
           <div className="text-center py-20">
@@ -764,8 +759,8 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={categories} cartCount={itemCount} />
+      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "Cart", href: "/cart" }, { label: "Checkout" }]} className="mb-6" />

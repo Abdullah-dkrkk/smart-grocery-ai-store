@@ -16,10 +16,9 @@ import type { ProductCategory } from "@/types/product"
 
 interface HeaderProps {
   categories?: ProductCategory[]
-  cartCount?: number
 }
 
-export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderProps) {
+export function Header({ categories = [] }: HeaderProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
@@ -125,7 +124,7 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
                       rows.push(
                         <div key={i} className="flex gap-3 mb-3">
                           {pair.map((c) => (
-                            <a key={c.id} href={`/category/${c.slug}`}
+                            <a key={c.id} href={`/categories/${c.slug}`}
                               className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors border">
                               {c.image ? (
                                 <span className="w-7 h-7 rounded-full overflow-hidden shrink-0">
@@ -182,7 +181,7 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
                 </div>
               ) : session ? (
                 <Link
-                  href="/my-account"
+                  href="/dashboard?role=user"
                   className="flex items-center gap-2 bg-brand-green text-white px-5 py-2 rounded-lg text-base font-semibold hover:bg-brand-green/90 transition-colors"
                 >
                   <User className="h-4 w-4" />
@@ -266,7 +265,7 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
                 </>
               ) : session ? (
                 <Link
-                  href="/my-account"
+                  href="/dashboard?role=user"
                   className="flex items-center gap-1 rounded-lg bg-brand-green text-white px-2.5 py-1 text-[13px] font-semibold hover:bg-brand-green/90 transition-colors"
                 >
                   <User className="h-3.5 w-3.5" />
@@ -337,7 +336,7 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
                       <ul className="space-y-2">
                         {col.links.map((ln) => (
                           <li key={ln}>
-                            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{ln}</a>
+                            <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-default">{ln}</span>
                           </li>
                         ))}
                       </ul>
@@ -376,7 +375,7 @@ export function Header({ categories = [], cartCount: _cartCount = 0 }: HeaderPro
               <Input name="q" type="search" placeholder="Search for products..." className="h-11" />
             </form>
             {displayCategories.map((cat) => (
-              <a key={cat.id} href={`/category/${cat.slug}`}
+              <a key={cat.id} href={`/categories/${cat.slug}`}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm hover:bg-muted transition-colors"
                 onClick={() => setMobileMenuOpen(false)}>
                 {cat.image ? (

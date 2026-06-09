@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
+import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { FilterSidebar } from "@/components/store/filter-sidebar"
 import { ProductGrid } from "@/components/store/product-grid"
 import { Pagination } from "@/components/store/pagination"
@@ -17,12 +18,6 @@ import { useCategories } from "@/lib/hooks/use-categories"
 import type { Product, ProductCategory, ProductSortOption } from "@/types/product"
 import { useCartContext } from "@/lib/providers/cart-provider"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
-
-const announcements = [
-  { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
-  { text: "Free delivery on orders over $50 — shop now!" },
-  { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
-]
 
 const ITEMS_PER_PAGE = 12
 
@@ -121,8 +116,8 @@ function SearchPageInner() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={categories} cartCount={3} />
+      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "Search" }]} className="mb-6" />

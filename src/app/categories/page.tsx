@@ -9,15 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { handleImgError } from "@/lib/utils/placeholder"
+import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { AlertCircle, RefreshCw, Package, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ProductCategory } from "@/types/product"
-
-const announcements = [
-  { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
-  { text: "Free delivery on orders over $50 — shop now!" },
-  { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
-]
 
 export default function CategoriesPage() {
   const { data: categories = [], isLoading, error, refetch } = useCategories()
@@ -25,8 +20,8 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={categories} cartCount={3} />
+      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero */}

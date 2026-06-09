@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ShoppingBag, Truck, Tag, Package, RotateCcw, Sparkles } from "lucide-react"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
+import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { CategoryShowcase } from "@/components/store/category-showcase"
 import { BannerRow } from "@/components/sections/banner-row"
 import { ProductSlider } from "@/components/store/product-slider"
@@ -26,12 +27,6 @@ import {
   DealsOfDaySkeleton,
 } from "@/components/ui/skeleton"
 import type { TestimonialItem } from "@/types/common"
-
-const announcements = [
-  { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
-  { text: "Free delivery on orders over $50 — shop now!" },
-  { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
-]
 
 const testimonials: TestimonialItem[] = [
   { id: 1, name: "James Dopli", rating: 5, text: "Thanks for all your efforts and teamwork over the last several months! The quality and freshness of the produce is unmatched. Highly recommend SmartGrocery for all your daily needs.", date: "2 weeks ago" },
@@ -178,8 +173,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={categories} cartCount={3} />
+      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8 space-y-16">
         {/* Hero Banner with Leaf Drift animation */}

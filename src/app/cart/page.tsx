@@ -5,6 +5,7 @@ import Link from "next/link"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
+import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { QuantitySelector } from "@/components/common/quantity-selector"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,12 +17,6 @@ import { useCartContext } from "@/lib/providers/cart-provider"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { useValidateDiscount } from "@/lib/hooks/use-discounts"
 import type { DiscountValidation } from "@/lib/api/types"
-
-const announcements = [
-  { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
-  { text: "Free delivery on orders over $50 — shop now!" },
-  { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
-]
 
 export default function CartPage() {
   const { items, itemCount, subtotal, updateQuantity, removeItem, loading } = useCartContext()
@@ -73,8 +68,8 @@ export default function CartPage() {
   if (catLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={categories} cartCount={0} />
+        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <Header categories={categories} />
         <main className="container mx-auto px-4 py-8">
           <Breadcrumbs items={[{ label: "Cart" }]} className="mb-6" />
           <Skeleton className="h-9 w-64 mb-8" />
@@ -118,8 +113,8 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <AnnouncementBar announcements={announcements} interval={5000} />
-        <Header categories={categories} cartCount={0} />
+        <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+        <Header categories={categories} />
         <main className="container mx-auto px-4 py-16">
           <Breadcrumbs items={[{ label: "Cart" }]} className="mb-8" />
           <div className="text-center py-20">
@@ -138,8 +133,8 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={categories} cartCount={itemCount} />
+      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "Cart" }]} className="mb-6" />

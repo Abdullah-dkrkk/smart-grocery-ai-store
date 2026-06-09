@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { AnnouncementBar } from "@/components/sections/announcement-bar"
 import { Header } from "@/components/sections/header"
+import { HEADER_ANNOUNCEMENTS } from "@/lib/constants"
 import { Footer } from "@/components/store/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -24,12 +25,6 @@ import { MOCK_PRODUCTS } from "@/lib/mock/products"
 import { cn } from "@/lib/utils"
 import { handleImgError } from "@/lib/utils/placeholder"
 import type { Product } from "@/types/product"
-
-const announcements = [
-  { text: "Grand opening — up to 15% off all items. Only 3 days left!" },
-  { text: "Free delivery on orders over $50 — shop now!" },
-  { text: "Trendy 25 silver jewelry — save up to 35% off today!" },
-]
 
 export default function WishlistPage() {
   const { showToast } = useToast()
@@ -93,8 +88,8 @@ export default function WishlistPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AnnouncementBar announcements={announcements} interval={5000} />
-      <Header categories={categories} cartCount={3} />
+      <AnnouncementBar announcements={HEADER_ANNOUNCEMENTS} interval={5000} />
+      <Header categories={categories} />
 
       <main className="container mx-auto px-4 py-8">
         <Breadcrumbs items={[{ label: "My Wishlist" }]} className="mb-6" />

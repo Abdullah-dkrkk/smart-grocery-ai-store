@@ -124,7 +124,7 @@ export function CategoryShowcase({
             [&::-webkit-scrollbar-thumb]:rounded-full
             ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}>
             {categories.map((cat, idx) => (
-              <a key={cat.id} href={`/category/${cat.slug}`} draggable="false"
+              <a key={cat.id} href={`/categories/${cat.slug}`} draggable="false"
                 className={`group flex flex-col items-center justify-center text-center p-6 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 min-w-[160px] min-h-[200px] flex-shrink-0 snap-start ${getCategoryBg(idx)}`}>
                 {cat.image ? (
                   <span className="inline-flex items-center justify-center w-[50px] h-[50px] rounded-full overflow-hidden mb-3">

@@ -1,14 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Loader2, CheckCircle } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { Plus, Loader2, CheckCircle, AlertCircle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { productsApi } from "@/lib/api/products"
+import { setAuthToken } from "@/lib/api/config"
 
 export function VendorAddProduct() {
+  const { data: session } = useSession()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState("")
   const [form, setForm] = useState({
     name: "", description: "", price: "", compare_price: "",
     stock_quantity: "10", sku: "", unit: "piece", category: "",
@@ -16,11 +21,29 @@ export function VendorAddProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+    if (!form.name || !form.price) { setError("Name and price are required"); return }
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      if (session?.user?.token) setAuthToken(session.user.token)
+      await productsApi.createVendorProduct({
+        name: form.name,
+        description: form.description,
+        price: form.price,
+        compare_at_price: form.compare_price || undefined,
+        stock_quantity: Number(form.stock_quantity),
+        sku: form.sku || undefined,
+        unit: form.unit,
+        category_name: form.category || undefined,
+      })
+      setSaving(false)
+      setSaved(true)
+      setForm({ name: "", description: "", price: "", compare_price: "", stock_quantity: "10", sku: "", unit: "piece", category: "" })
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create product")
+      setSaving(false)
+    }
   }
 
   return (
@@ -95,6 +118,7 @@ export function VendorAddProduct() {
               </div>
             </div>
 
+            {error && <div className="flex items-center gap-2 text-sm text-red-600"><AlertCircle className="h-4 w-4" /> {error}</div>}
             <div className="flex items-center gap-3 pt-2">
               <Button type="submit" disabled={saving || !form.name || !form.price}>
                 {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
