@@ -1,5 +1,5 @@
+import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
 
 const publicPaths = [
   "/",
@@ -11,10 +11,12 @@ const publicPaths = [
   "/categories",
   "/cart",
   "/search",
+  "/about",
+  "/contact",
+  "/blog",
   "/api",
   "/_next",
   "/favicon",
-  "/preview",
 ]
 
 const authPaths = [
@@ -31,26 +33,23 @@ function isAuthPath(pathname: string): boolean {
   return authPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+export default auth((req) => {
+  const { pathname } = req.nextUrl
 
   if (isPublicPath(pathname)) {
     return NextResponse.next()
   }
 
   if (isAuthPath(pathname)) {
-    const token = request.cookies.get("next-auth.session-token")?.value ||
-                  request.cookies.get("__Secure-next-auth.session-token")?.value
-
-    if (!token) {
-      const loginUrl = new URL("/login", request.url)
+    if (!req.auth) {
+      const loginUrl = new URL("/login", req.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
     }
   }
 
   return NextResponse.next()
-}
+})
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
