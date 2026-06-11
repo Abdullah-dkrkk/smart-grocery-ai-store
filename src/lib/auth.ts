@@ -31,6 +31,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null
 
         try {
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 8000)
+
           const res = await fetch(`${API_BASE_URL}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -38,13 +41,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: credentials.email,
               password: credentials.password,
             }),
+            signal: controller.signal,
           })
+          clearTimeout(timeout)
+
+          if (!res.ok) return null
 
           const data: ApiAuthResponse = await res.json()
 
-          if (!res.ok || !data.success || !data.data) {
-            return null
-          }
+          if (!data.success || !data.data) return null
 
           const { user, token } = data.data
 
