@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { AuthSlider } from "@/components/auth/auth-slider"
 import { Eye, EyeOff, ChevronLeft, Loader2 } from "lucide-react"
 import { registerSchema } from "@/lib/validations"
+import { setAuthToken } from "@/lib/api/config"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
@@ -45,11 +46,12 @@ export default function RegisterPage() {
         setError(msg); setLoading(false); return
       }
 
+      setAuthToken(data.data.token)
+
       const result = await signIn("credentials", { email, password, redirect: false })
       if (result?.error) { setError("Account created but sign in failed. Please try logging in."); setLoading(false); return }
 
-      router.push("/")
-      router.refresh()
+      router.push("/dashboard?role=customer")
     } catch {
       setError("Something went wrong. Please try again.")
       setLoading(false)

@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { AuthSlider } from "@/components/auth/auth-slider"
 import { Eye, EyeOff, ChevronLeft, Loader2 } from "lucide-react"
 import { loginSchema } from "@/lib/validations"
+import { setAuthToken } from "@/lib/api/config"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
 export default function LoginPage() {
   return (
@@ -19,6 +22,7 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -34,17 +38,44 @@ function LoginForm() {
     setLoading(true)
 
     try {
+      // 1. Direct AJAX call to Laravel Sanctum API — visible in browser DevTools
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        setError(data.message || "Invalid email or password")
+        setLoading(false)
+        return
+      }
+
+      // 2. Store Sanctum token in memory + cookie for API client
+      setAuthToken(data.data.token)
+
+      // 3. Create NextAuth session — uses the pre-obtained token
+      //    (authorize validates via GET /auth/me, no duplicate login call)
       const result = await signIn("credentials", {
         email,
         password,
+        token: data.data.token,
         redirect: false,
-        callbackUrl: searchParams.get("callbackUrl") || "/dashboard?role=user",
       })
-      if (result?.error) { setError("Invalid email or password"); setLoading(false); return }
+
+      if (result?.error) {
+        setError("Failed to create session. Please try again.")
+        setLoading(false)
+        return
+      }
+
       setLoading(false)
-      window.location.href = result.url || "/dashboard?role=user"
+
+      // 4. Client-side SPA navigation — no full page reload
+      router.push(searchParams.get("callbackUrl") || "/dashboard?role=user")
     } catch {
-      setError("Something went wrong. Please try again.")
+      setError("Connection error. Make sure the backend server is running.")
       setLoading(false)
     }
   }

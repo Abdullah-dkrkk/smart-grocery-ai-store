@@ -18,6 +18,16 @@ interface ApiAuthResponse {
   message?: string
 }
 
+interface ApiMeResponse {
+  success: boolean
+  data: {
+    id: number
+    name: string
+    email: string
+    role: string
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -31,6 +41,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null
 
         try {
+          // SPA flow: browser already obtained a Sanctum token via direct AJAX.
+          // Validate it via GET /auth/me instead of logging in again.
+          const creds = credentials as Record<string, unknown>
+          if (creds.token) {
+            const token = String(creds.token)
+            const res = await fetch(`${API_BASE_URL}/auth/me`, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+              },
+            })
+            if (!res.ok) return null
+
+            const data: ApiMeResponse = await res.json()
+            if (!data.success || !data.data) return null
+
+            const user = data.data
+            return {
+              id: String(user.id),
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              token: token,
+            } as User
+          }
+
+          // Fallback: direct credentials authentication (e.g. NextAuth test page)
           const controller = new AbortController()
           const timeout = setTimeout(() => controller.abort(), 8000)
 
