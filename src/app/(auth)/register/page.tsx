@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -14,7 +13,6 @@ import { setAuthToken } from "@/lib/api/config"
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -48,10 +46,10 @@ export default function RegisterPage() {
 
       setAuthToken(data.data.token)
 
-      const result = await signIn("credentials", { email, password, redirect: false })
+      const result = await signIn("credentials", { email, password, token: data.data.token, redirect: false })
       if (result?.error) { setError("Account created but sign in failed. Please try logging in."); setLoading(false); return }
 
-      router.push("/dashboard?role=customer")
+      window.location.href = "/dashboard"
     } catch {
       setError("Something went wrong. Please try again.")
       setLoading(false)

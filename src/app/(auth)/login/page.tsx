@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -22,7 +22,6 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -70,10 +69,9 @@ function LoginForm() {
         return
       }
 
-      setLoading(false)
-
-      // 4. Client-side SPA navigation — no full page reload
-      router.push(searchParams.get("callbackUrl") || "/dashboard?role=user")
+      // 4. Full page navigation to trigger middleware & ensure session cookie is recognized
+      const callbackUrl = searchParams.get("callbackUrl")
+      window.location.href = callbackUrl || "/dashboard"
     } catch {
       setError("Connection error. Make sure the backend server is running.")
       setLoading(false)

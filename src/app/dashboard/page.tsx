@@ -2,10 +2,11 @@
 
 import { Suspense, useState, useRef, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { DashboardContent } from "@/components/dashboard/dashboard-content"
 import { Button } from "@/components/ui/button"
-import { PanelLeftClose, PanelLeft, Search, Bell, BellOff } from "lucide-react"
+import { PanelLeftClose, PanelLeft, Search, Bell, BellOff, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
 type Role = "user" | "vendor" | "nutritionist" | "super-admin"
@@ -22,8 +23,9 @@ export default function DashboardPage() {
 
 function DashboardContentInner() {
   const searchParams = useSearchParams()
-  const roleParam = searchParams.get("role") as Role | null
-  const currentRole: Role = roleParam && validRoles.includes(roleParam) ? roleParam : "user"
+  const { data: session, status } = useSession()
+  const sessionRole = (session?.user?.role as Role | undefined) || "user"
+  const currentRole: Role = validRoles.includes(sessionRole) ? sessionRole : "user"
   const tabParam = searchParams.get("tab")
 
   const [collapsed, setCollapsed] = useState(false)
@@ -40,6 +42,14 @@ function DashboardContentInner() {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  if (status !== "authenticated" && status !== "unauthenticated") {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-green" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-dvh overflow-hidden bg-background">

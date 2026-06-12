@@ -33,7 +33,7 @@ function isAuthPath(pathname: string): boolean {
   return authPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }
 
-export const proxy = auth((req) => {
+export const middleware = auth((req) => {
   const { pathname } = req.nextUrl
 
   if (isPublicPath(pathname)) {
@@ -45,6 +45,14 @@ export const proxy = auth((req) => {
       const loginUrl = new URL("/login", req.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
+    }
+
+    if (pathname.startsWith("/dashboard")) {
+      const url = req.nextUrl
+      if (url.searchParams.has("role")) {
+        url.searchParams.delete("role")
+        return NextResponse.redirect(url)
+      }
     }
   }
 

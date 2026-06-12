@@ -199,8 +199,7 @@ export function Sidebar({ role, activeItem, onItemClick, collapsed, onToggle }: 
     }
     removeAuthToken()
     await signOut({ redirect: false })
-    router.push("/")
-    router.refresh()
+    window.location.href = "/login"
   }
 
   return (
