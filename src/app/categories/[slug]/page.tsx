@@ -15,6 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { usePaginatedProducts } from "@/lib/hooks/use-products"
 import { useCartContext } from "@/lib/providers/cart-provider"
+import { useSession } from "next-auth/react"
+import { wishlistApi } from "@/lib/api/wishlist"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
 import { cn } from "@/lib/utils"
 import { handleImgError } from "@/lib/utils/placeholder"
@@ -37,6 +39,23 @@ export default function CategorySlugPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { addItem } = useCartContext()
+  const { data: session } = useSession()
+
+  const toggleWishlist = useCallback(async (product: any) => {
+    if (!session?.user?.token) {
+      window.location.href = "/login?callbackUrl=/categories/" + slug
+      return
+    }
+    try {
+      const exists = await wishlistApi.list()
+      const alreadyIn = Array.isArray(exists) && exists.some((w: any) => w.product_id === product.id || w.product?.id === product.id)
+      if (alreadyIn) {
+        await wishlistApi.remove(product.id)
+      } else {
+        await wishlistApi.add(product.id)
+      }
+    } catch {}
+  }, [session, slug])
 
   const { data: categories = [], isLoading: catLoading } = useCategories()
 
@@ -351,7 +370,7 @@ export default function CategorySlugPage() {
                     products={products}
                     columns={3}
                     onAddToCart={(p) => addItem(p)}
-                    onToggleWishlist={(p) => console.log("Toggle wishlist", p.name)}
+                    onToggleWishlist={toggleWishlist}
                   />
                 ) : (
                   <div className="space-y-4">

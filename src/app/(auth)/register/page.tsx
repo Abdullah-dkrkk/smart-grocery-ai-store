@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [role, setRole] = useState<string>("customer")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -24,7 +25,7 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
-    const parsed = registerSchema.safeParse({ name, email, password, password_confirmation: confirmPassword })
+    const parsed = registerSchema.safeParse({ name, email, password, password_confirmation: confirmPassword, role })
     if (!parsed.success) { setError(parsed.error.issues[0].message); return }
     setLoading(true)
 
@@ -32,7 +33,7 @@ export default function RegisterPage() {
       const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ name, email, password, password_confirmation: confirmPassword }),
+        body: JSON.stringify({ name, email, password, password_confirmation: confirmPassword, role }),
       })
 
       const data = await res.json()
@@ -131,6 +132,31 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   className="text-[14px]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-lg font-medium mb-2">I want to join as</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "customer", label: "Customer", desc: "Shop for groceries" },
+                    { value: "vendor", label: "Vendor", desc: "Sell your products" },
+                    { value: "nutritionist", label: "Nutritionist", desc: "Share meal plans" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setRole(opt.value)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${
+                        role === opt.value
+                          ? "border-brand-green bg-brand-green/5"
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <div className="text-sm font-semibold">{opt.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full h-11 text-[14px] bg-brand-green hover:bg-brand-green/90 text-white">

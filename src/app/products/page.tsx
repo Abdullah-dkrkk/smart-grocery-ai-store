@@ -17,6 +17,8 @@ import { useProducts } from "@/lib/hooks/use-products"
 import { useCategories } from "@/lib/hooks/use-categories"
 import type { Product, ProductCategory, ProductSortOption } from "@/types/product"
 import { useCartContext } from "@/lib/providers/cart-provider"
+import { useSession } from "next-auth/react"
+import { wishlistApi } from "@/lib/api/wishlist"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
 
 const ITEMS_PER_PAGE = 12
@@ -39,8 +41,25 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
   const { addItem } = useCartContext()
+  const { data: session } = useSession()
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+
+  const toggleWishlist = useCallback(async (product: Product) => {
+    if (!session?.user?.token) {
+      window.location.href = "/login?callbackUrl=/products"
+      return
+    }
+    try {
+      const exists = await wishlistApi.list()
+      const alreadyIn = Array.isArray(exists) && exists.some((w: any) => w.product_id === product.id || w.product?.id === product.id)
+      if (alreadyIn) {
+        await wishlistApi.remove(product.id)
+      } else {
+        await wishlistApi.add(product.id)
+      }
+    } catch {}
+  }, [session])
 
   const { data: allProducts = [], isLoading: prodLoading } = useProducts({ per_page: 100 })
   const { data: categories = [], isLoading: catLoading } = useCategories()
@@ -268,7 +287,7 @@ export default function ProductsPage() {
                     products={paginated}
                     columns={3}
                     onAddToCart={(p) => addItem(p)}
-                    onToggleWishlist={(p) => console.log("Toggle wishlist", p.name)}
+                    onToggleWishlist={toggleWishlist}
                   />
                 ) : (
                   <div className="space-y-4">

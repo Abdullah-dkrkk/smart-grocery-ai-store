@@ -24,13 +24,22 @@ export default function ContactPage() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSending(true)
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api-proxy/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) throw new Error("Failed to send message")
       setSending(false)
       setSubmitted(true)
-    }, 1500)
+    } catch {
+      setSending(false)
+      alert("Failed to send message. Please try again later.")
+    }
   }
 
   return (
