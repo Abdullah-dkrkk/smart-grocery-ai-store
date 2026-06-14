@@ -19,6 +19,7 @@ const bricolageGrotesque = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: "SmartGrocery — AI-Powered Grocery Store",
   description: "Fresh groceries delivered to your door. AI-powered recommendations, health profiles, and smart shopping.",
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({

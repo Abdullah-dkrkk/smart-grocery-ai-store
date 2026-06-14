@@ -358,7 +358,7 @@ export default function HomePage() {
         <Separator />
 
         {/* Newsletter */}
-        <section>
+        <section className="mb-8">
           <NewsletterSection
             title="Stay home & get your daily needs from our shop"
             description="Start Your Daily Shopping with Nest Mart"
