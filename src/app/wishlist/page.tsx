@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Breadcrumbs } from "@/components/common/breadcrumbs"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
-import { Heart, ShoppingBag, Loader2, Eye, Check } from "lucide-react"
+import { Heart, ShoppingBag, ShoppingCart, Loader2, Eye, Check } from "lucide-react"
 import { useWishlist } from "@/lib/hooks/use-wishlist"
 import { useToast } from "@/components/ui/toast"
 import { useCartContext } from "@/lib/providers/cart-provider"
@@ -226,7 +226,9 @@ function WishlistCard({
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
             ) : cartState === "added" ? (
               <Check className="h-3 w-3 mr-1" />
-            ) : null}
+            ) : (
+              <ShoppingCart className="h-3 w-3 mr-1" />
+            )}
             {cartState === "added" ? "Added" : "Add to Cart"}
           </Button>
         </div>

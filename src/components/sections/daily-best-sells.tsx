@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
-import { Loader2, Check } from "lucide-react"
+import { Loader2, Check, ShoppingCart } from "lucide-react"
 import { handleImgError } from "@/lib/utils/placeholder"
 import { useCartContext } from "@/lib/providers/cart-provider"
 import type { Product } from "@/types/product"
@@ -107,7 +107,7 @@ function DailyProductCard({ product }: { product: Product | null | undefined }) 
         <div className="mt-auto flex items-center justify-between pt-2">
           <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
           <Button
-            className="text-xs px-4 h-9 min-h-[38px] rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer"
+            className="text-xs px-4 h-9 min-h-[38px] rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer uppercase"
             onClick={handleAddToCart}
             disabled={cartState === "loading"}
           >
@@ -115,7 +115,9 @@ function DailyProductCard({ product }: { product: Product | null | undefined }) 
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
             ) : cartState === "added" ? (
               <Check className="h-3 w-3 mr-1" />
-            ) : null}
+            ) : (
+              <ShoppingCart className="h-3 w-3 mr-1" />
+            )}
             {cartState === "added" ? "Added" : "Add to Cart"}
           </Button>
         </div>

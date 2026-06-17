@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useMemo } from "react"
+import { useRef, useMemo } from "react"
 import Link from "next/link"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +19,7 @@ import { NewsletterSection } from "@/components/sections/newsletter-section"
 import { Footer } from "@/components/store/footer"
 import { useCategories } from "@/lib/hooks/use-categories"
 import { useProducts, useFeaturedProducts } from "@/lib/hooks/use-products"
+import { useLeafParticle } from "@/lib/hooks/use-leaf-particle"
 import {
   ProductSliderSkeleton,
   CategoryShowcaseSkeleton,
@@ -42,13 +43,21 @@ const testimonials: TestimonialItem[] = [
   { id: 12, name: "Priya Sharma", rating: 4, text: "I love the weekly meal plans with auto-generated shopping lists. It's saved me hours every week and helped me eat healthier. Highly recommended!", date: "2 months ago" },
 ]
 
+function ErrorSection({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <p className="text-sm">{message}</p>
+    </div>
+  )
+}
+
 export default function HomePage() {
   const heroRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  const { data: categories = [], isLoading: catLoading } = useCategories()
-  const { data: products = [], isLoading: prodLoading } = useProducts()
-  const { data: featuredProducts = [], isLoading: featLoading } = useFeaturedProducts()
+  const { data: categories = [], isLoading: catLoading, isError: catError } = useCategories()
+  const { data: products = [], isLoading: prodLoading, isError: prodError } = useProducts()
+  const { data: featuredProducts = [], isLoading: featLoading, isError: featError } = useFeaturedProducts()
 
   const bestSellerTabs = useMemo(() => {
     const prods = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 8)
@@ -85,125 +94,7 @@ export default function HomePage() {
     ]
   }, [products])
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const container = heroRef.current
-    if (!canvas || !container) return
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    interface Leaf {
-      x: number; y: number; vx: number; vy: number
-      size: number; rotation: number; rotSpeed: number
-      color: string; alpha: number; sway: number; swaySpeed: number
-    }
-
-    let animId: number
-    let leaves: Leaf[] = []
-    let mouseX = -9999, mouseY = -9999, mouseActive = false
-
-    function resize() {
-      if (!container || !canvas || !ctx) return
-      const rect = container.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = rect.width * dpr
-      canvas.height = rect.height * dpr
-      canvas.style.width = `${rect.width}px`
-      canvas.style.height = `${rect.height}px`
-      ctx.scale(dpr, dpr)
-      init(rect.width, rect.height)
-    }
-
-    function init(w: number, h: number) {
-      leaves = []
-      for (let i = 0; i < 120; i++) {
-        leaves.push({
-          x: Math.random() * w, y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.3, vy: Math.random() * 0.6 + 0.2,
-          size: Math.random() * 24 + 8,
-          rotation: Math.random() * Math.PI * 2,
-          rotSpeed: (Math.random() - 0.5) * 0.025,
-          color: [
-            `hsla(${90 + Math.random() * 40}, ${60 + Math.random() * 20}%, ${28 + Math.random() * 20}%, 0.5)`,
-            `hsla(${110 + Math.random() * 30}, ${55 + Math.random() * 25}%, ${22 + Math.random() * 18}%, 0.45)`,
-            `hsla(${80 + Math.random() * 30}, ${65 + Math.random() * 15}%, ${18 + Math.random() * 15}%, 0.5)`,
-            `hsla(${140 + Math.random() * 30}, ${50 + Math.random() * 25}%, ${15 + Math.random() * 15}%, 0.4)`,
-            `hsla(${30 + Math.random() * 20}, ${55 + Math.random() * 25}%, ${20 + Math.random() * 12}%, 0.45)`,
-            `hsla(${160 + Math.random() * 20}, ${45 + Math.random() * 20}%, ${12 + Math.random() * 12}%, 0.4)`,
-            `hsla(${100 + Math.random() * 20}, ${50 + Math.random() * 20}%, ${16 + Math.random() * 10}%, 0.45)`,
-            `hsla(${120 + Math.random() * 20}, ${40 + Math.random() * 20}%, ${10 + Math.random() * 10}%, 0.35)`,
-          ][i % 8],
-          alpha: Math.random() * 0.35 + 0.15, sway: 0, swaySpeed: Math.random() * 0.02 + 0.008,
-        })
-      }
-    }
-
-    function drawLeaf(c: CanvasRenderingContext2D, l: Leaf) {
-      l.sway += l.swaySpeed
-      l.x += l.vx + Math.sin(l.sway) * 0.5
-      l.y += l.vy
-      l.rotation += l.rotSpeed
-
-      if (mouseActive) {
-        const dx = l.x - mouseX; const dy = l.y - mouseY
-        const dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < 200 && dist > 0) {
-          const force = (1 - dist / 200) * 0.5
-          l.vx += (dx / dist) * force * 0.3
-          l.vy += (dy / dist) * force * 0.15
-        }
-        l.vx *= 0.94
-        l.vy *= 0.94
-      } else {
-        l.vx *= 0.92
-        l.vy *= 0.92
-      }
-      if (!container) return
-      const rect = container.getBoundingClientRect()
-      if (l.y > rect.height + 40) { l.y = -30; l.x = Math.random() * rect.width; l.vy = Math.random() * 0.6 + 0.2 }
-      if (l.x < -50) l.x = rect.width + 30
-      if (l.x > rect.width + 50) l.x = -30
-
-      c.save(); c.translate(l.x, l.y); c.rotate(l.rotation); c.globalAlpha = l.alpha
-      c.beginPath(); c.moveTo(0, 0)
-      c.quadraticCurveTo(l.size * 0.5, -l.size * 0.4, l.size * 0.85, 0)
-      c.quadraticCurveTo(l.size * 0.5, l.size * 0.4, 0, 0)
-      c.closePath(); c.fillStyle = l.color; c.fill()
-      c.globalAlpha = 1; c.restore()
-    }
-
-    function draw() {
-      if (!ctx || !container) return
-      const rect = container.getBoundingClientRect()
-      ctx.clearRect(0, 0, rect.width, rect.height)
-      for (const l of leaves) drawLeaf(ctx, l)
-      animId = requestAnimationFrame(draw)
-    }
-
-    function onMove(clientX: number, clientY: number) {
-      if (!container) return; const rect = container.getBoundingClientRect()
-      mouseX = clientX - rect.left; mouseY = clientY - rect.top; mouseActive = true
-    }
-    function onMouseMove(e: MouseEvent) { onMove(e.clientX, e.clientY) }
-    function onTouchMove(e: TouchEvent) { const t = e.touches[0]; onMove(t.clientX, t.clientY) }
-    function onLeave() { mouseActive = false; mouseX = -9999; mouseY = -9999 }
-
-    resize(); draw()
-    window.addEventListener("resize", resize)
-    container.addEventListener("mousemove", onMouseMove)
-    container.addEventListener("mouseleave", onLeave)
-    container.addEventListener("touchmove", onTouchMove, { passive: false })
-    container.addEventListener("touchend", onLeave)
-
-    return () => {
-      cancelAnimationFrame(animId)
-      window.removeEventListener("resize", resize)
-      container.removeEventListener("mousemove", onMouseMove)
-      container.removeEventListener("mouseleave", onLeave)
-      container.removeEventListener("touchmove", onTouchMove)
-      container.removeEventListener("touchend", onLeave)
-    }
-  }, [])
+  useLeafParticle(canvasRef)
 
   return (
     <div className="min-h-screen bg-background">
@@ -238,6 +129,10 @@ export default function HomePage() {
         <section>
           {catLoading ? (
             <CategoryShowcaseSkeleton />
+          ) : catError ? (
+            <ErrorSection message="Failed to load categories" />
+          ) : categories.length === 0 ? (
+            <ErrorSection message="No categories available" />
           ) : (
             <CategoryShowcase
               title="Featured Categories"
@@ -266,6 +161,10 @@ export default function HomePage() {
         <section>
           {featLoading || prodLoading ? (
             <ProductSliderSkeleton />
+          ) : featError ? (
+            <ErrorSection message="Failed to load featured products" />
+          ) : featuredProducts.length === 0 && products.length === 0 ? (
+            <ErrorSection message="No products available" />
           ) : (
             <ProductSlider
               title="Best Sellers"
@@ -282,6 +181,10 @@ export default function HomePage() {
         <section>
           {prodLoading ? (
             <ProductSliderSkeleton />
+          ) : prodError ? (
+            <ErrorSection message="Failed to load products" />
+          ) : products.length === 0 ? (
+            <ErrorSection message="No products available" />
           ) : (
             <ProductSlider
               title="Popular Products"
@@ -298,7 +201,7 @@ export default function HomePage() {
         <section>
           {prodLoading ? (
             <DailyBestSellsSkeleton />
-          ) : (
+          ) : prodError || products.length === 0 ? null : (
             <DailyBestSells
               title="Daily Best Sells"
               subtitle="Check out our best deals today"
@@ -318,7 +221,7 @@ export default function HomePage() {
         <section>
           {prodLoading ? (
             <DealsOfDaySkeleton />
-          ) : (
+          ) : prodError || products.length === 0 ? null : (
             <DealsOfDay
               title="Deals Of The Day"
               subtitle="Limited time offers — grab them before they're gone"
@@ -335,7 +238,7 @@ export default function HomePage() {
         <section>
           {prodLoading ? (
             <ProductSliderSkeleton />
-          ) : (
+          ) : prodError || products.length === 0 ? null : (
             <ProductSlider
               title="Special Offers"
               description="Great discounts on your favorite products"
@@ -358,7 +261,7 @@ export default function HomePage() {
         <Separator />
 
         {/* Newsletter */}
-        <section className="mb-8">
+        <section className="mb-5">
           <NewsletterSection
             title="Stay home & get your daily needs from our shop"
             description="Start Your Daily Shopping with Nest Mart"

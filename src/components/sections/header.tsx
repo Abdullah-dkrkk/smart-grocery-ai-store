@@ -183,7 +183,7 @@ export function Header({ categories = [] }: HeaderProps) {
                 </div>
               ) : session ? (
                 <Link
-                  href="/dashboard?role=user"
+                  href="/dashboard"
                   className="flex items-center gap-2 bg-brand-green text-white px-5 py-2 rounded-lg text-base font-semibold hover:bg-brand-green/90 transition-colors"
                 >
                   <User className="h-4 w-4" />
@@ -267,7 +267,7 @@ export function Header({ categories = [] }: HeaderProps) {
                 </>
               ) : session ? (
                 <Link
-                  href="/dashboard?role=user"
+                  href="/dashboard"
                   className="flex items-center gap-1 rounded-lg bg-brand-green text-white px-2.5 py-1 text-[13px] font-semibold hover:bg-brand-green/90 transition-colors"
                 >
                   <User className="h-3.5 w-3.5" />

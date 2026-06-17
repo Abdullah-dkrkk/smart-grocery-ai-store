@@ -95,6 +95,27 @@ export function DailyBestSellsSkeleton() {
   )
 }
 
+export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="rounded-xl border bg-card overflow-hidden">
+          <div className="aspect-[4/3] bg-muted animate-pulse" />
+          <div className="p-4 space-y-3">
+            <div className="h-3 w-16 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
+            <div className="h-3 w-full bg-muted rounded animate-pulse" />
+            <div className="flex items-center justify-between pt-2">
+              <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+              <div className="h-8 w-20 bg-muted rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function DealsOfDaySkeleton() {
   return (
     <section>
@@ -103,18 +124,37 @@ export function DealsOfDaySkeleton() {
         <Skeleton className="h-4 w-64 mt-2" />
       </div>
       <div className="grid lg:grid-cols-12 gap-6">
-        <Skeleton className="lg:col-span-5 h-[560px] rounded-xl" />
+        <div className="lg:col-span-5 bg-card border rounded-xl overflow-hidden max-h-[564px] flex flex-col">
+          <Skeleton className="aspect-[4/3] rounded-none" />
+          <div className="p-5 space-y-4 flex-1">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-8 w-28" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-36" />
+              <div className="flex gap-1.5">
+                {Array.from({ length: 4 }).map((_, j) => (
+                  <Skeleton key={j} className="h-10 w-10" />
+                ))}
+              </div>
+            </div>
+            <Skeleton className="h-11 w-full rounded-lg" />
+          </div>
+        </div>
         <div className="lg:col-span-7 space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex gap-4 bg-card border rounded-lg p-4">
-              <Skeleton className="w-24 h-24 rounded-lg" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3 w-24" />
+              <Skeleton className="w-24 h-24 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3 w-20" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-16" />
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between pt-0.5">
                   <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-9 w-20 rounded-lg" />
+                  <Skeleton className="h-8 w-24 rounded-lg" />
                 </div>
               </div>
             </div>

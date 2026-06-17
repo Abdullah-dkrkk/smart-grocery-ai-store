@@ -245,6 +245,12 @@ body {
   }
 }
 
+/* Hide Next.js dev tools indicator (bottom-left N icon) */
+#__nextjs-dev-tools-indicator,
+nextjs-portal {
+  display: none !important;
+}
+
 @keyframes toast-in {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }

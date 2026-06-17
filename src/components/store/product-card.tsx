@@ -82,8 +82,8 @@ export function ProductCard({
           </div>
         </div>
         <div className="flex items-center">
-          <Button size="sm" className="bg-brand-green hover:bg-brand-green/90 text-white whitespace-nowrap" onClick={() => onAddToCart?.(product)}>
-            Add to cart
+          <Button size="sm" className="bg-brand-green hover:bg-brand-green/90 text-white whitespace-nowrap uppercase" onClick={() => onAddToCart?.(product)}>
+            <ShoppingCart className="h-3 w-3 mr-1" /> Add to Cart
           </Button>
         </div>
       </div>
@@ -171,7 +171,9 @@ export function ProductCard({
                 <Loader2 className="h-3 w-3 mr-1 animate-spin" />
               ) : cartState === "added" ? (
                 <Check className="h-3 w-3 mr-1" />
-              ) : null}
+              ) : (
+                <ShoppingCart className="h-3 w-3 mr-1" />
+              )}
               {cartState === "added" ? "Added" : "Add to Cart"}
             </Button>
           </div>

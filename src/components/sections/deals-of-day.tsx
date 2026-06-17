@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
 import { PriceDisplay } from "@/components/common/price-display"
-import { Loader2, Check } from "lucide-react"
+import { Loader2, Check, ShoppingCart } from "lucide-react"
 import { handleImgError } from "@/lib/utils/placeholder"
 import { useCartContext } from "@/lib/providers/cart-provider"
 import type { Product } from "@/types/product"
@@ -38,7 +38,7 @@ function DealProductCard({ product, discount }: { product: Product; discount: nu
       <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
         <img src={product.image} alt={product.name} className="h-full w-full object-cover" loading="lazy" onError={handleImgError} />
         {discount && discount > 0 && (
-          <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] font-bold px-1.5 rounded-sm">
+          <span className="absolute top-[6px] right-[6px] bg-amber-500 text-white text-[10px] font-bold px-1.5 rounded-full">
             -{discount}%
           </span>
         )}
@@ -52,7 +52,7 @@ function DealProductCard({ product, discount }: { product: Product; discount: nu
         <div className="flex items-center justify-between mt-2">
           <PriceDisplay price={product.price} comparePrice={product.compare_price ?? undefined} size="md" />
           <Button
-            className="text-xs px-4 h-9 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer"
+            className="text-xs px-4 h-9 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white font-medium cursor-pointer uppercase"
             onClick={handleAdd}
             disabled={cartState === "loading"}
           >
@@ -60,8 +60,10 @@ function DealProductCard({ product, discount }: { product: Product; discount: nu
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
             ) : cartState === "added" ? (
               <Check className="h-3 w-3 mr-1" />
-            ) : null}
-            {cartState === "added" ? "Added" : "Add"}
+            ) : (
+              <ShoppingCart className="h-3 w-3 mr-1" />
+            )}
+            {cartState === "added" ? "Added" : "Add to Cart"}
           </Button>
         </div>
       </div>

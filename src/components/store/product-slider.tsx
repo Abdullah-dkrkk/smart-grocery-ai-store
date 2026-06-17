@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Heart, Eye, Loader2, Check } from "lucide-react"
+import { ChevronLeft, ChevronRight, Heart, Eye, Loader2, Check, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StarRating } from "@/components/common/star-rating"
@@ -126,7 +126,9 @@ function ProductSlideCard({ product }: { product: Product | null | undefined }) 
                 <Loader2 className="h-3 w-3 mr-1 animate-spin" />
               ) : cartState === "added" ? (
                 <Check className="h-3 w-3 mr-1" />
-              ) : null}
+              ) : (
+                <ShoppingCart className="h-3 w-3 mr-1" />
+              )}
               {cartState === "added" ? "Added" : "Add to Cart"}
             </Button>
           </div>
