@@ -10,7 +10,7 @@ export interface ValidateCodeParams {
 
 export const discountsApi = {
   validateCode(params: ValidateCodeParams) {
-    return post<DiscountValidation>("/customer/orders/validate-discount", params)
+    return post<DiscountValidation>("/customer/orders/apply-discount", params)
   },
 
   applyCode(params: ValidateCodeParams) {
